@@ -1,3 +1,4 @@
+// Function to set up Express application and required middleware
 const express = require('express');
 const mysql = require('mysql');
 const bcrypt = require('bcryptjs');
@@ -46,21 +47,27 @@ db.connect(err => {
 // Serve uploaded files statically
 app.use('/uploads', express.static('uploads'));
 
-// Routes
+// Route to redirect to signup page
 app.get('/', (req, res) => {
     res.redirect('/signup');
 });
 
+// Route to serve signup page
 app.get('/signup', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'signup.html'));
 });
 
+// Route to serve signin page
 app.get('/signin', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'signin.html'));
 });
 
+// Route to serve index page
 app.get('/index', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'index.html'));
+});
+app.get('/forgotpassword', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'forgotpassword.html'));
 });
 
 // User registration route
@@ -74,6 +81,19 @@ app.post('/signup', (req, res) => {
             return res.status(500).send('Database error: ' + err.message);
         }
         res.send('User registered successfully!');
+    });
+});
+// Route to handle password change
+app.post('/forgotpassword/change', (req, res) => {
+    const { email, newPassword } = req.body;
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    const sql = `UPDATE users SET password = ? WHERE email = ?`;
+
+    db.query(sql, [hashedPassword, email], (err, result) => {
+        if (err) {
+            return res.status(500).send('Database error: ' + err.message);
+        }
+        res.json({ message: 'Password changed successfully', error: false });
     });
 });
 
@@ -92,39 +112,87 @@ app.post('/signin/email', (req, res) => {
         }
     });
 });
-app.post('/create-folder', (req, res) => {
-    const { folderName } = req.body;
-    const userId = req.session.userId; // Retrieving user ID from the session
-    const userDir = path.join(__dirname, 'uploads', String(userId)); // Path specific to the user
 
-    const dir = path.join(userDir, folderName);
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-        res.send('Folder created successfully!');
-    } else {
-        res.status(400).send('Folder already exists.');
+// Route to get user folders
+app.get('/get-user-folders', function(req, res) {
+    const userId = req.session.userId;
+    if (!userId) {
+        return res.status(403).send('You must be logged in to view folders.');
     }
+
+    const sql = 'SELECT * FROM folders WHERE user_id = ?';
+    db.query(sql, [userId], function(err, results) {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).send('Failed to fetch folders.');
+        }
+        res.json(results);
+    });
 });
 
+// Backend Endpoint to Get User Files
+app.get('/get-user-files', function (req, res) {
+    if (!req.session.userId) {
+        return res.status(401).send('Authentication required.'); // Or redirect to login page
+    }
+    const userId = req.session.userId;  // Retrieve user ID from session
+    db.query('SELECT * FROM files WHERE user_id = ?', [userId], function (err, results) {
+        if (err) {
+            return res.status(500).json({ message: 'Database error: ' + err.message });
+        }
+        res.json(results);
+    });
+});
 
+const fs = require('fs');
+// Route to create a new folder
+app.post('/create-folder', (req, res) => {
+    const { folderName } = req.body;
+    const userId = req.session.userId;
+    
+    if (!userId) {
+        return res.status(401).send("Please log in to create folders.");
+    }
+
+    const userDir = path.join(__dirname, 'uploads', String(userId)); // Base directory path for the user
+    const folderPath = path.join(userDir, folderName);
+
+    fs.mkdir(folderPath, { recursive: true }, (err) => {
+        if (err) {
+            return res.status(500).send('Failed to create folder: ' + err.message);
+        }
+        const sql = 'INSERT INTO folders (user_id, folder_name, folder_path, creation_date) VALUES (?, ?, ?, NOW())';
+        db.query(sql, [userId, folderName, folderPath], (error, results) => {
+            if (error) {
+                return res.status(500).send('Database error: ' + error.message);
+            }
+            res.send('Folder created successfully!');
+        });
+    });
+});
 
 // Sign-in with password route
 app.post('/signin/password', (req, res) => {
     const { email, password } = req.body;
-    const sql = `SELECT password FROM users WHERE email = ?`;
+    const sql = `SELECT id, password FROM users WHERE email = ?`;
+
     db.query(sql, [email], (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'Database error: ' + err.message, error: true });
         }
         if (results.length > 0) {
-            const hashedPassword = results[0].password;
-            bcrypt.compare(password, hashedPassword, (err, isMatch) => {
+            const user = results[0];
+            bcrypt.compare(password, user.password, (err, isMatch) => {
+                if (err) {
+                    return res.status(500).json({ message: 'Bcrypt error', error: true });
+                }
                 if (isMatch) {
-                    res.json({ message: 'Logged in successfully', userId: results[0].userId, error: false });
+                    req.session.userId = user.id;  // Set user ID in session
+                    res.json({ message: 'Logged in successfully', error: false });
                 } else {
                     res.json({ message: 'Password is incorrect', error: true });
                 }
-            });            
+            });
         } else {
             res.json({ message: 'Email not found', error: true });
         }
@@ -149,7 +217,6 @@ app.post('/upload', upload.single('file'), function (req, res) {
         res.send('File uploaded successfully!');
     });
 });
-
 
 // Backend Endpoint to Get User Files
 app.get('/get-user-files', function (req, res) {

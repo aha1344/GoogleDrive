@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
             content.classList.add('hidden');
         }
     });
+    document.getElementById('filesBtn').addEventListener('click', showFiles);
+    document.getElementById('foldersBtn').addEventListener('click', showFolders);
 
     // Show the Home content by default
     showContent(homeContent);
@@ -84,33 +86,82 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         contentElement.classList.remove('hidden');
     }
-
-    function fetchUserFiles() {
-        const userId = sessionStorage.getItem('userId');  // Ensuring user ID is retrieved from sessionStorage
-    
-        fetch('/get-user-files', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId })
-        })
-        .then(response => response.json())
-        .then(files => {
-            const fileListContainer = document.getElementById('fileListContainer');
-            fileListContainer.innerHTML = ''; // Clear existing files
-    
-            files.forEach(file => {
-                const fileElement = document.createElement('div');
-                fileElement.textContent = file.file_name;
-                fileListContainer.appendChild(fileElement);
-            });
-        })
-        .catch(err => console.error('Error fetching files:', err));
-    }    
     // Initialize file and folder buttons and layouts
     setupButtonHandlers();
     setupFileHandlers();
+});
+document.getElementById('file-upload-input').addEventListener('change', function(event) {
+    const files = event.target.files;
+    if (files.length === 0) {
+        alert('No file selected!');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('file', files[0]);  // 'file' is the key expected by the server
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.text())
+    .then(text => {
+        alert('File uploaded successfully');
+        console.log(text);
+    })
+    .catch(err => {
+        console.error('Error uploading file:', err);
+        alert('Error uploading file');
+    });
+});
+document.getElementById('create-folder-btn').addEventListener('click', function() {
+    const folderName = prompt("Enter the name for the new folder:");
+    if (!folderName) {
+        alert("Folder name cannot be empty!");
+        return;
+    }
+
+    const data = { folderName: folderName };
+    fetch('/create-folder', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.text())
+    .then(text => {
+        alert(text); // "Folder created successfully!"
+        // Optionally refresh the list of files/folders here if needed
+    })
+    .catch(err => {
+        console.error('Error creating folder:', err);
+        alert('Failed to create folder.');
+    });
+});
+
+document.getElementById('filesBtn').addEventListener('click', function() {
+    fetch('/get-user-files')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to fetch files');
+        }
+        return response.json();
+    })
+    .then(files => {
+        const fileListContainer = document.getElementById('fileListContainer');
+        fileListContainer.innerHTML = ''; // Clear existing files
+
+        files.forEach(file => {
+            const fileElement = document.createElement('div');
+            fileElement.className = 'file-item';
+            fileElement.textContent = file.file_name + " (" + file.file_path + ")";
+            fileListContainer.appendChild(fileElement);
+        });
+    })
+    .catch(err => {
+        console.error('Error fetching files:', err);
+        alert('Error fetching files');
+    });
 });
 
 
@@ -118,18 +169,34 @@ document.addEventListener('DOMContentLoaded', () => {
 function handleButtonClick(buttonId) {
     const buttons = document.querySelectorAll('.ff-btn, .layout-btn');
     buttons.forEach(button => {
+        button.classList.remove('active');
         if (button.id === buttonId) {
-            button.classList.toggle('active');
-
-            // Check if the "Files" button is clicked
-            if (button.id === 'filesBtn') {
-                fetchUserFiles();
-            }
-        } else {
-            button.classList.remove('active');
+            button.classList.add('active');
         }
     });
+
+    // Check if the "Files" button is clicked
+    if (buttonId === 'filesBtn') {
+        fetchUserFiles();
+    }
 }
+
+function fetchUserFiles() {
+    fetch('/get-user-files')
+    .then(response => response.json())
+    .then(files => {
+        const fileListContainer = document.getElementById('fileListContainer');
+        fileListContainer.innerHTML = ''; // Clear existing entries
+        files.forEach(file => {
+            const fileElement = document.createElement('div');
+            fileElement.className = 'file-item';
+            fileElement.textContent = `${file.file_name} (${file.file_path})`;
+            fileListContainer.appendChild(fileElement);
+        });
+    })
+    .catch(err => console.error('Error fetching files:', err));
+}
+
 function uploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
@@ -141,6 +208,7 @@ function uploadFile(file) {
     })
     .catch(error => console.error('Error uploading file:', error));
 }
+
 
 // Function to handle dropdown menu
 function toggleDropdown(button) {
@@ -154,6 +222,7 @@ function toggleDropdown(button) {
     dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
 }
 
+
 window.onclick = function(event) {
     if (!event.target.matches('#dropdown-button') && !event.target.matches('.arrow')) {
         const dropdowns = document.querySelectorAll('.dropdown-content');
@@ -163,6 +232,78 @@ window.onclick = function(event) {
             }
         });
     }
+}
+document.getElementById('foldersBtn').addEventListener('click', function() {
+    fetch('/get-user-folders')
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch folders');
+        return response.json();
+    })
+    .then(folders => {
+        const folderListContainer = document.getElementById('folderListContainer');
+        folderListContainer.innerHTML = ''; // Clear previous entries
+
+        folders.forEach(folder => {
+            const folderElement = document.createElement('div');
+            folderElement.className = 'folder-item';
+            folderElement.textContent = folder.folder_name;
+            folderListContainer.appendChild(folderElement);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching folders:', error);
+        alert('Error fetching folders.');
+    });
+});
+function showFiles() {
+    const filesContainer = document.getElementById('fileListContainer');
+    const foldersContainer = document.getElementById('folderListContainer');
+    filesContainer.classList.remove('hidden');
+    foldersContainer.classList.add('hidden');
+    fetchUserFiles();  // This function fetches and displays the files
+}
+function fetchUserFolders() {
+    fetch('/get-user-folders')  // Adjust the API endpoint as needed
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(folders => {
+        const folderListContainer = document.getElementById('folderListContainer');
+        folderListContainer.innerHTML = '';  // Clear previous entries
+
+        folders.forEach(folder => {
+            const folderElement = document.createElement('div');
+            folderElement.className = 'folder-item';
+            folderElement.textContent = folder.folder_name;  // Adjust according to the data structure
+            folderListContainer.appendChild(folderElement);
+        });
+    })
+    .catch(err => {
+        console.error('Error fetching folders:', err);
+        alert('Failed to load folders');
+    });
+}
+
+
+function showFolders() {
+    const filesContainer = document.getElementById('fileListContainer');
+    const foldersContainer = document.getElementById('folderListContainer');
+    filesContainer.classList.add('hidden');  // Hide files container
+    foldersContainer.classList.remove('hidden');  // Show folders container
+    fetchUserFolders();  // Fetch and display folders
+}
+
+
+function createNewFolderPrompt() {
+    const folderName = prompt("Please enter the folder name:");
+    if (!folderName) {
+        alert("Folder name cannot be empty.");
+        return;
+    }
+    createNewFolder(folderName);
 }
 function createNewFolder(folderName) {
     const userId = sessionStorage.getItem('userId');  // Use the stored user ID

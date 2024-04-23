@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener("DOMContentLoaded", function() {
     var nextButton = document.querySelector('#next-button');
     var passwordContainer = document.querySelector('.password-container');
     var emailInput = document.querySelector('input[name="email"]');
@@ -6,12 +6,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var emailError = document.getElementById('emailError');
     var passwordError = document.getElementById('passwordError');
 
-    // Function to validate email format
     function isValidEmail(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
-    // Function to handle click event on Next button
     function handleNextButtonClick() {
         if (passwordContainer.style.display === 'none') {
             if (!isValidEmail(emailInput.value)) {
@@ -43,7 +41,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Function to handle password check
     function handlePasswordCheck() {
         fetch('/signin/password', {
             method: 'POST',
@@ -67,10 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Event listener for click event on Next button
     nextButton.addEventListener('click', handleNextButtonClick);
 
-    // Event listener for keydown event (Enter key)
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
@@ -81,16 +76,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-
-    // Event listener for click event on "Forgot password?" link
-    var forgotPasswordLink = document.querySelector('.forgot');
-    forgotPasswordLink.addEventListener('click', function(event) {
-        event.preventDefault();  // Prevent default behavior of link (i.e., navigating to the href)
-        window.location.href = '/forgotpassword';  // Navigate to the forgot password page
-    });
 });
 
-// Function to toggle password visibility
 function togglePasswordVisibility() {
     var eye = document.getElementById('eye');
     var passwordInput = document.getElementById('password');
@@ -105,7 +92,6 @@ function togglePasswordVisibility() {
     }
 }
 
-// Function to navigate to signup page
 function goToSignup() {
     window.location.href = "/signup";
 }

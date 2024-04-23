@@ -17,11 +17,12 @@
 </head>
 <body>
     <div class="container">
-        <!-- HEADER SIDE BAR CONTENT-->
+        
         <header>
             <div class="sidebar">
                 <div class="logo">
                     <div class="drive-cont"><img src="/Pics/Google_Drive_logo.png" alt="" id="drive-logo"> Drive</div>
+                </div>
                 <div class="add-new">
                     <button class="add-new-button" id="dropdown-button" onclick="toggleDropdown(this)"><span id="plus-sign">&plus;</span>New</button>
                     <div class="dropdown-content" id="myDropdown">
@@ -29,7 +30,7 @@
                             <img src="/Pics/new-folder.png" alt="" class="logo-img">New Folder
                         </button>
                         <button class="dp" onclick="document.getElementById('file-upload-input').click();">
-                            <img src="/Pics/file-upload.png" alt="" class="logo-img"> File Upload
+                            <img src="/Pics/file-upload.png" alt="" class="logo-img">File Upload
                         </button>
                         <form id="create-folder-form" style="display: none;">
                             <input type="text" id="folder-name-input" name="folderName">
@@ -56,11 +57,11 @@
                         <button class="l1-button" id="trash"> <img src="/Pics/trash.png" alt="Trash" class="logo-img">Trash</button>
                         <button class="l1-button" id="storage"> <img src="/Pics/cloud.png" alt="Storage" class="logo-img">Storage</button>
 
-                        <!-- storage  bar here -->
+                        
                         <div class="loading-bar">
                             <div class="progress" style="width: 50%;"></div>
                         </div>
-                        <!-- example -->
+                        
                         <div class="c">0.0 GB of 15 GB used</div>
                         <br>
                         <button id="more-storage">Get more storage</button>
@@ -70,21 +71,15 @@
         </div>
         </header>
         
-        <!-- In the body, only the main-box must be changed when the user click a button from the header (Home/My drive/ Computers/ shared with me/ recents/ etc....) -->
         <div class="body">
-
-            <!-- The search-container-->
             <div class="search-container">
                 <button id="search-button"><img src="/Pics/search.png" alt="search" id="search-img"></button>
                 <input id="search-bar" type="search" placeholder="Search in Drive">
                 <button id="setting-filter"><img src="/Pics/settings.png" alt="" id="setting-filter-img"></button>
             </div>
 
-            <!-- HERE is the main-box which should change 
-                after the user clicks the one of the buttons (Home/My Drive/Computers/Shared with me/ Recent/......) -->
             <div id="main-box">
 
-                <!-- HOME -->
                 <div class="content hidden" id="homeContent">
                     <div class="Layer1">
                         <div class="title">Welcome to Drive</div>
@@ -97,19 +92,16 @@
                                 <img src="/Pics/tick.png" alt="Tick" class="tick">
                                 <img src="/Pics/files.png" alt="Files" class="logo-img-main1">
                                 <span>Files</span>
-                                
                             </button>
                             <button class="ff-btn" id="foldersBtn" onclick="handleButtonClick('foldersBtn')">
                                 <img src="/Pics/folder.png" alt="Folders" class="logo-img-main1">
                                 <img src="/Pics/tick.png" alt="Tick" class="tick">
                                 <span>Folders</span>
-                                
                             </button>
                             <div id="fileListContainer"></div>
+                            <div id="folderListContainer"></div>
                         </div>
-
                         <div class="layout-container">
-                            <!-- Layout btns -->
                             
                             <button class="layout-btn" id="list-btn1" onclick="handleButtonClick('list-btn1')">
                                 <img src="/Pics/tick.png" alt="Tick" class="tick">
@@ -123,11 +115,8 @@
                         </div>
                         
                     </div>
-
-
                 </div>
 
-                <!-- My drive -->
                 <div class="content hidden" id="myDriveContent">
                     <div class="main-div">
                         <div class="features-mydrive">
@@ -142,7 +131,6 @@
 
 
                         <div class="layout-container">
-                            <!-- Layout btns -->
                             
                             <button class="layout-btn" id="list-btn1" onclick="handleButtonClick('list-btn1')">
                                 <img src="/Pics/tick.png" alt="Tick" class="tick">
@@ -156,7 +144,6 @@
                         </div>
                     </div>
 
-                    
 
                     <div class="features-container">
 
@@ -227,7 +214,6 @@
 
                 </div>
                 
-                <!-- Computers -->
                 <div class="content hidden" id="computersContent">
                     <div class="Layer1">
                         <div class="title">Computers</div>
@@ -236,14 +222,13 @@
 
                 </div>
 
-                <!-- shared with me -->
                 <div class="content hidden" id="shareContent">
                     <div class="Layer1">
                         <div class="title">Shared with me</div>
                         <div class="sharedA">
                             
                             <div class="layout-container2">
-                                <!-- Layout btns -->
+                                
                                 <button class="layout-btn" id="list-btn1" onclick="handleButtonClick('list-btn1')">
                                     <img src="/Pics/tick.png" alt="Tick" class="tick">
                                     <img src="/Pics/list.png" alt="List Layout" class="logo-img-main2">
@@ -300,7 +285,6 @@
 
                 </div>
 
-                <!-- recent -->
                 <div class="content hidden" id="recentContent">
                     
                     <div class="Layer1">
@@ -308,7 +292,7 @@
                         <div class="sharedA">
                             
                             <div class="layout-container2">
-                                <!-- Layout btns -->
+                                
                                 <button class="layout-btn" id="list-btn1" onclick="handleButtonClick('list-btn1')">
                                     <img src="/Pics/tick.png" alt="Tick" class="tick">
                                     <img src="/Pics/list.png" alt="List Layout" class="logo-img-main2">
@@ -364,7 +348,6 @@
                     </div>
                 </div>
 
-                <!-- starred -->
                 <div class="content hidden" id="starredContent">
 
                     <div class="Layer1">
@@ -372,7 +355,7 @@
                         <div class="sharedA">
                             
                             <div class="layout-container2">
-                                <!-- Layout btns -->
+                                
                                 <button class="layout-btn" id="list-btn1" onclick="handleButtonClick('list-btn1')">
                                     <img src="/Pics/tick.png" alt="Tick" class="tick">
                                     <img src="/Pics/list.png" alt="List Layout" class="logo-img-main2">
@@ -429,7 +412,6 @@
 
                 </div>
 
-                <!-- spam -->
                 <div class="content hidden" id="spamContent">
 
                     <div class="Layer1">
@@ -439,7 +421,7 @@
 
 
                 </div>
-                <!-- trash -->
+
                 <div class="content hidden" id="trashContent">
 
                     <div class="Layer1">
@@ -447,7 +429,7 @@
                         <div class="sharedA">
                             
                             <div class="layout-container2">
-                                <!-- Layout btns -->
+                                
                                 <button class="layout-btn" id="list-btn1" onclick="handleButtonClick('list-btn1')">
                                     <img src="/Pics/tick.png" alt="Tick" class="tick">
                                     <img src="/Pics/list.png" alt="List Layout" class="logo-img-main2">
@@ -490,77 +472,23 @@
     
                             
                         </div>
+
                     </div>
 
                 </div>
-                <!-- storage -->
-                <div class="content hidden" id="storageContent">
 
+                <div class="content hidden" id="storageContent">
                     <div class="Layer1">
                         <div class="title">Storage</div>
-                        <div class="sharedA">
-                            
-                            <div class="layout-container2">
-                                <!-- Layout btns -->
-                                <button class="layout-btn" id="list-btn1" onclick="handleButtonClick('list-btn1')">
-                                    <img src="/Pics/tick.png" alt="Tick" class="tick">
-                                    <img src="/Pics/list.png" alt="List Layout" class="logo-img-main2">
-    
-                                </button>
-                                <button class="layout-btn" id="grid-btn1" onclick="handleButtonClick('grid-btn1')">
-                                    <img src="/Pics/tick.png" alt="Tick" class="tick">
-                                    <img src="/Pics/grid.png" alt="Grid Layout" class="logo-img-main2">
-                                </button>
-                            </div>
-
-                            <button id="details"><img src="/Pics/info.png" alt="view details" id="view-details-img"></button>
-                        </div>
-                        
-                    </div>
-
-                    <div class="Layer2">
-                        <div class="features-container">
-
-                            <div class="features">
-                                <button class="feature-btn" id="dropdown-button" onclick="toggleDropdown(this)">Type <span class="arrow">&#9660;</span></button>
-                                <div class="dropdown-content">
-                                    <button>Documents</button>
-                                    <button>PDFs</button>
-                                    <button>Word</button>
-                                </div>
-                            </div>
-    
-                            <div class="features">
-                                <button class="feature-btn" id="dropdown-button" onclick="toggleDropdown(this)">Modified <span class="arrow">&#9660;</span></button>
-                                <div class="dropdown-content">
-                                    <button>Today</button>
-                                    <button>Last 7 days</button>
-                                    <button>Last 30 days</button>
-                                    <button>This year </button>
-                                    <button>Last year</button>
-                                    <button>Custom date range</button>
-                                </div>
-                            </div>
-    
-                            
-                        </div>
+                        <button id="details"><img src="/Pics/info.png" alt="view details" id="view-details-img"></button>
                     </div>
 
                 </div>
+
             </div>
 
         </div>
 
     </div>
-        
 </body>
-
-
 </html>
-
-
-
-
-
-
-
