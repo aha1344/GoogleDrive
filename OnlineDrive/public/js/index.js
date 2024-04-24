@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const trashBtn = document.getElementById('trash');
     const storageBtn = document.getElementById('storage');
 
-    const mainPageContent = document.getElementById('mainPageContent');
     const homeContent = document.getElementById('homeContent');
     const myDriveContent = document.getElementById('myDriveContent');
     const computersContent = document.getElementById('computersContent');
@@ -21,7 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const trashContent = document.getElementById('trashContent');
     const storageContent = document.getElementById('storageContent');
 
-    // Initially hide all content sections except the home content
+    function showContent(contentElement) {
+        allContents.forEach(content => {
+            content.classList.add('hidden');
+        });
+        contentElement.classList.remove('hidden');
+    }
+
     const allContents = document.querySelectorAll('.content');
     allContents.forEach(content => {
         if (content !== homeContent) {
@@ -31,88 +36,94 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filesBtn').addEventListener('click', showFiles);
     document.getElementById('foldersBtn').addEventListener('click', showFolders);
 
-    // Show the Home content by default
     showContent(homeContent);
     document.title = 'Home - Google Drive';
 
     homeBtn.addEventListener('click', () => {
         showContent(homeContent);
-        fetchUserFiles();  // Fetch and display files for Home
+        fetchUserFiles(); 
     });
 
     myDriveBtn.addEventListener('click', () => {
         showContent(myDriveContent);
-        fetchUserFiles();  // Fetch and display files for My Drive
+        fetchUserFiles(); 
     });
 
     computersBtn.addEventListener('click', () => {
         showContent(computersContent);
-        document.title = 'Computers - Google Drive'; // Change title to Computers
+        document.title = 'Computers - Google Drive'; 
     });
 
     shareBtn.addEventListener('click', () => {
         showContent(shareContent);
-        document.title = 'Shared with Me - Google Drive'; // Change title to Shared with Me
+        document.title = 'Shared with Me - Google Drive'; 
     });
 
     recentBtn.addEventListener('click', () => {
         showContent(recentContent);
-        document.title = 'Recent - Google Drive'; // Change title to Recent
+        document.title = 'Recent - Google Drive'; 
     });
 
     starredBtn.addEventListener('click', () => {
         showContent(starredContent);
-        document.title = 'Starred - Google Drive'; // Change title to Starred
+        document.title = 'Starred - Google Drive'; 
     });
 
     spamBtn.addEventListener('click', () => {
         showContent(spamContent);
-        document.title = 'Spam - Google Drive'; // Change title to Spam
+        document.title = 'Spam - Google Drive'; 
     });
 
     trashBtn.addEventListener('click', () => {
         showContent(trashContent);
-        document.title = 'Trash - Google Drive'; // Change title to Trash
+        document.title = 'Trash - Google Drive'; 
     });
 
     storageBtn.addEventListener('click', () => {
         showContent(storageContent);
-        document.title = 'Storage - Google Drive'; // Change title to Storage
+        document.title = 'Storage - Google Drive'; 
     });
 
-    function showContent(contentElement) {
-        allContents.forEach(content => {
-            content.classList.add('hidden');
+    function setupButtonHandlers() {
+        const createFileBtn = document.getElementById('create-file-btn');
+        const fileInputs = document.getElementById('file-inputs');
+        const submitFileBtn = document.getElementById('submit-file-btn');
+        const fileTable = document.getElementById('file-table');
+        const fileUploadInput = document.getElementById('file-upload-input');
+        fileUploadInput.addEventListener('change', function() {
+            if(this.files.length > 0) {
+                uploadFile(this.files[0]);
+            }
         });
-        contentElement.classList.remove('hidden');
+
+        createFileBtn.addEventListener('click', () => {
+            fileInputs.style.display = 'block';
+        });
+
+        submitFileBtn.addEventListener('click', () => {
+            const fileName = document.getElementById('file-name').value;
+            const fileReason = document.getElementById('file-reason').value;
+            const fileOwner = document.getElementById('file-owner').value;
+            const fileLocation = document.getElementById('file-location').value;
+
+            const newRow = fileTable.insertRow(-1);
+            newRow.insertCell(0).textContent = fileName;
+            newRow.insertCell(1).textContent = fileReason;
+            newRow.insertCell(2).textContent = fileOwner;
+            newRow.insertCell(3).textContent = fileLocation;
+
+            document.getElementById('file-name').value = '';
+            document.getElementById('file-reason').value = '';
+            document.getElementById('file-owner').value = '';
+            document.getElementById('file-location').value = '';
+            fileInputs.style.display = 'none';
+        });
     }
-    // Initialize file and folder buttons and layouts
+
     setupButtonHandlers();
     setupFileHandlers();
 });
-document.getElementById('file-upload-input').addEventListener('change', function(event) {
-    const files = event.target.files;
-    if (files.length === 0) {
-        alert('No file selected!');
-        return;
-    }
-    const formData = new FormData();
-    formData.append('file', files[0]);  // 'file' is the key expected by the server
 
-    fetch('/upload', {
-        method: 'POST',
-        body: formData,
-    })
-    .then(response => response.text())
-    .then(text => {
-        alert('File uploaded successfully');
-        console.log(text);
-    })
-    .catch(err => {
-        console.error('Error uploading file:', err);
-        alert('Error uploading file');
-    });
-});
 document.getElementById('create-folder-btn').addEventListener('click', function() {
     const folderName = prompt("Enter the name for the new folder:");
     if (!folderName) {
@@ -130,14 +141,51 @@ document.getElementById('create-folder-btn').addEventListener('click', function(
     })
     .then(response => response.text())
     .then(text => {
-        alert(text); // "Folder created successfully!"
-        // Optionally refresh the list of files/folders here if needed
+        alert(text); 
+        toggleDropdown(document.getElementById('myDropdown'), true); // Close dropdown after action
     })
     .catch(err => {
         console.error('Error creating folder:', err);
         alert('Failed to create folder.');
     });
 });
+
+document.getElementById('file-upload-input').addEventListener('change', function(event) {
+    const files = event.target.files;
+    if (files.length === 0) {
+        alert('No file selected!');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('file', files[0]); 
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.text())
+    .then(text => {
+        alert('File uploaded successfully');
+        console.log(text);
+        toggleDropdown(document.getElementById('myDropdown'), true); // Close dropdown after action
+    })
+    .catch(err => {
+        console.error('Error uploading file:', err);
+        alert('Error uploading file');
+    });
+});
+
+function toggleDropdown(button, close = false) {
+    const dropdown = button.nextElementSibling;
+    const allDropdowns = document.querySelectorAll('.dropdown-content');
+    allDropdowns.forEach(d => {
+        if (d !== dropdown && d.style.display === 'block') {
+            d.style.display = 'none';
+        }
+    });
+    dropdown.style.display = close ? 'none' : (dropdown.style.display === 'block') ? 'none' : 'block';
+}
+
 
 document.getElementById('filesBtn').addEventListener('click', function() {
     fetch('/get-user-files')
@@ -149,7 +197,7 @@ document.getElementById('filesBtn').addEventListener('click', function() {
     })
     .then(files => {
         const fileListContainer = document.getElementById('fileListContainer');
-        fileListContainer.innerHTML = ''; // Clear existing files
+        fileListContainer.innerHTML = ''; 
 
         files.forEach(file => {
             const fileElement = document.createElement('div');
@@ -164,63 +212,6 @@ document.getElementById('filesBtn').addEventListener('click', function() {
     });
 });
 
-
-// Function to handle button clicks for files and folders, list and grid layouts
-function handleButtonClick(buttonId) {
-    const buttons = document.querySelectorAll('.ff-btn, .layout-btn');
-    buttons.forEach(button => {
-        button.classList.remove('active');
-        if (button.id === buttonId) {
-            button.classList.add('active');
-        }
-    });
-
-    // Check if the "Files" button is clicked
-    if (buttonId === 'filesBtn') {
-        fetchUserFiles();
-    }
-}
-
-function fetchUserFiles() {
-    fetch('/get-user-files')
-    .then(response => response.json())
-    .then(files => {
-        const fileListContainer = document.getElementById('fileListContainer');
-        fileListContainer.innerHTML = ''; // Clear existing entries
-        files.forEach(file => {
-            const fileElement = document.createElement('div');
-            fileElement.className = 'file-item';
-            fileElement.textContent = `${file.file_name} (${file.file_path})`;
-            fileListContainer.appendChild(fileElement);
-        });
-    })
-    .catch(err => console.error('Error fetching files:', err));
-}
-
-function uploadFile(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    fetch('/upload', { method: 'POST', body: formData })
-    .then(response => response.text())
-    .then(result => {
-        alert('File uploaded successfully');
-        fetchUserFiles(); // Refresh the list of files
-    })
-    .catch(error => console.error('Error uploading file:', error));
-}
-// Function to handle dropdown menu
-function toggleDropdown(button) {
-    const dropdown = button.nextElementSibling;
-    const allDropdowns = document.querySelectorAll('.dropdown-content');
-    allDropdowns.forEach(d => {
-        if (d !== dropdown && d.style.display === 'block') {
-            d.style.display = 'none';
-        }
-    });
-    dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
-}
-
-
 window.onclick = function(event) {
     if (!event.target.matches('#dropdown-button') && !event.target.matches('.arrow')) {
         const dropdowns = document.querySelectorAll('.dropdown-content');
@@ -230,7 +221,8 @@ window.onclick = function(event) {
             }
         });
     }
-}
+};
+
 document.getElementById('foldersBtn').addEventListener('click', function() {
     fetch('/get-user-folders')
     .then(response => {
@@ -239,7 +231,7 @@ document.getElementById('foldersBtn').addEventListener('click', function() {
     })
     .then(folders => {
         const folderListContainer = document.getElementById('folderListContainer');
-        folderListContainer.innerHTML = ''; // Clear previous entries
+        folderListContainer.innerHTML = ''; 
 
         folders.forEach(folder => {
             const folderElement = document.createElement('div');
@@ -252,16 +244,28 @@ document.getElementById('foldersBtn').addEventListener('click', function() {
         console.error('Error fetching folders:', error);
         alert('Error fetching folders.');
     });
+    toggleDropdown(document.getElementById('myDropdown'));
 });
+
+
 function showFiles() {
     const filesContainer = document.getElementById('fileListContainer');
     const foldersContainer = document.getElementById('folderListContainer');
     filesContainer.classList.remove('hidden');
     foldersContainer.classList.add('hidden');
-    fetchUserFiles();  // This function fetches and displays the files
+    fetchUserFiles(); 
 }
+
+function showFolders() {
+    const filesContainer = document.getElementById('fileListContainer');
+    const foldersContainer = document.getElementById('folderListContainer');
+    filesContainer.classList.add('hidden'); 
+    foldersContainer.classList.remove('hidden'); 
+    fetchUserFolders(); 
+}
+
 function fetchUserFolders() {
-    fetch('/get-user-folders')  // Adjust the API endpoint as needed
+    fetch('/get-user-folders') 
     .then(response => {
         if (!response.ok) {
             throw new Error('Network response was not ok ' + response.statusText);
@@ -270,12 +274,12 @@ function fetchUserFolders() {
     })
     .then(folders => {
         const folderListContainer = document.getElementById('folderListContainer');
-        folderListContainer.innerHTML = '';  // Clear previous entries
+        folderListContainer.innerHTML = ''; 
 
         folders.forEach(folder => {
             const folderElement = document.createElement('div');
             folderElement.className = 'folder-item';
-            folderElement.textContent = folder.folder_name;  // Adjust according to the data structure
+            folderElement.textContent = folder.folder_name; 
             folderListContainer.appendChild(folderElement);
         });
     })
@@ -285,16 +289,34 @@ function fetchUserFolders() {
     });
 }
 
-
-function showFolders() {
-    const filesContainer = document.getElementById('fileListContainer');
-    const foldersContainer = document.getElementById('folderListContainer');
-    filesContainer.classList.add('hidden');  // Hide files container
-    foldersContainer.classList.remove('hidden');  // Show folders container
-    fetchUserFolders();  // Fetch and display folders
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    fetch('/upload', { method: 'POST', body: formData })
+    .then(response => response.text())
+    .then(result => {
+        alert('File uploaded successfully');
+        fetchUserFiles(); 
+    })
+    .catch(error => console.error('Error uploading file:', error));
 }
 
+function fetchUserFiles() {
+    fetch('/get-user-files')
+    .then(response => response.json())
+    .then(files => {
+        const fileListContainer = document.getElementById('fileListContainer');
+        fileListContainer.innerHTML = ''; 
 
+        files.forEach(file => {
+            const fileElement = document.createElement('div');
+            fileElement.className = 'file-item';
+            fileElement.textContent = `${file.file_name} (${file.file_path})`;
+            fileListContainer.appendChild(fileElement);
+        });
+    })
+    .catch(err => console.error('Error fetching files:', err));
+}
 function createNewFolderPrompt() {
     const folderName = prompt("Please enter the folder name:");
     if (!folderName) {
@@ -303,8 +325,9 @@ function createNewFolderPrompt() {
     }
     createNewFolder(folderName);
 }
+
 function createNewFolder(folderName) {
-    const userId = sessionStorage.getItem('userId');  // Use the stored user ID
+    const userId = sessionStorage.getItem('userId'); 
 
     fetch('/create-folder', {
         method: 'POST',
@@ -316,52 +339,7 @@ function createNewFolder(folderName) {
     .then(response => response.text())
     .then(result => {
         alert(result);
-        fetchUserFiles();  // Refresh the file list
+        fetchUserFiles(); 
     })
     .catch(error => console.error('Error creating folder:', error));
-}
-
-
-
-function setupButtonHandlers() {
-    const createFileBtn = document.getElementById('create-file-btn');
-    const fileInputs = document.getElementById('file-inputs');
-    const submitFileBtn = document.getElementById('submit-file-btn');
-    const fileTable = document.getElementById('file-table');
-    const newFolderBtn = document.querySelector(".add-new-button");
-    newFolderBtn.addEventListener('click', () => {
-        const folderName = prompt("Enter folder name:");
-        if(folderName) {
-            createNewFolder(folderName);
-        }
-    });
-    const fileUploadInput = document.getElementById('file-upload-input');
-    fileUploadInput.addEventListener('change', function() {
-        if(this.files.length > 0) {
-            uploadFile(this.files[0]);
-        }
-    });
-
-    createFileBtn.addEventListener('click', () => {
-        fileInputs.style.display = 'block';
-    });
-
-    submitFileBtn.addEventListener('click', () => {
-        const fileName = document.getElementById('file-name').value;
-        const fileReason = document.getElementById('file-reason').value;
-        const fileOwner = document.getElementById('file-owner').value;
-        const fileLocation = document.getElementById('file-location').value;
-
-        const newRow = fileTable.insertRow(-1);
-        newRow.insertCell(0).textContent = fileName;
-        newRow.insertCell(1).textContent = fileReason;
-        newRow.insertCell(2).textContent = fileOwner;
-        newRow.insertCell(3).textContent = fileLocation;
-
-        document.getElementById('file-name').value = '';
-        document.getElementById('file-reason').value = '';
-        document.getElementById('file-owner').value = '';
-        document.getElementById('file-location').value = '';
-        fileInputs.style.display = 'none';
-    });
 }
