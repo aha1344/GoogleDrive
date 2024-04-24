@@ -380,3 +380,27 @@
     display: flex;
     margin-right: 10px;
 }
+.kebab-menu {
+    display: none;  /* initially hidden */
+    position: absolute;  /* positioned relative to its parent */
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px;
+    z-index: 1000;  /* high z-index to ensure it appears on top */
+    right: 10px;  /* adjust based on your layout */
+    top: 20px;  /* adjust based on your layout */
+}
+.kebab-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.kebab-menu ul li {
+    padding: 8px 10px;
+    cursor: pointer;
+}
+.kebab-menu ul li:hover {
+    background-color: #e0e0e0;
+}
+

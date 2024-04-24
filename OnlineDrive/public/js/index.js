@@ -208,8 +208,6 @@ function uploadFile(file) {
     })
     .catch(error => console.error('Error uploading file:', error));
 }
-
-
 // Function to handle dropdown menu
 function toggleDropdown(button) {
     const dropdown = button.nextElementSibling;
