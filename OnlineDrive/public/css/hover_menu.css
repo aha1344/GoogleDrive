@@ -1,13 +1,16 @@
 /* Add this to a new CSS file hover_menu.css */
-.file-item {
+.file-item, .folder-item{
     display: flex;
     justify-content: space-between;
     padding: 10px;
     border-bottom: 1px solid #ccc;
     background-color: #fff;
     cursor: pointer;
+    width: 60%;
   }
-  
+  .file-item:hover, .folder-item:hover{
+    background-color: #ccc;
+  }
   .file-item:hover .file-actions {
     display: block; /* Show actions on hover */
   }

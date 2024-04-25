@@ -154,26 +154,30 @@
 
 /* creating a table file: */
 .file-header {
+    margin-top: 10px;
     display: flex;
     /* justify-content: space-between; */
     border-bottom: 1px solid #C7C7C7;
-    
+
     /* vertical-align: middle; */
 }
 
 .file-column {
     /* flex: 1; */
     padding: 5px 15px;
-    width: 15%;
+    width: 100%;
     border-color: transparent;
     display: flex;
-    justify-content: center;
+    justify-content:left;
     /* background-color: #444746; */
 }
 
 
 #name{
-    padding-right: 400px;
+    padding-right: 300px;
+}
+.name-content{
+    padding-right: 300px;
 }
 
 #more{
@@ -392,3 +396,7 @@
     top: 20px;  /* adjust based on your layout */
 }
 
+.Layer3{
+    display: flex;
+    flex-direction: column;
+}
