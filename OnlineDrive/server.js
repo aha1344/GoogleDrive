@@ -69,6 +69,25 @@ app.get('/index', (req, res) => {
 app.get('/forgotpassword', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'forgotpassword.html'));
 });
+app.post('/share', (req, res) => {
+    // Logic to share the file
+  });
+  
+  app.post('/download', (req, res) => {
+    // Logic to download the file
+  });
+  
+  app.post('/rename', (req, res) => {
+    // Logic to rename the file
+  });
+  
+  app.post('/star', (req, res) => {
+    // Logic to star the file
+  });
+  
+  app.post('/move-to-trash', (req, res) => {
+    // Logic to move the file to trash
+  });  
 
 // User registration route
 app.post('/signup', (req, res) => {
