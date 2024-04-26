@@ -309,14 +309,42 @@ function fetchUserFiles() {
         fileListContainer.innerHTML = ''; 
 
         files.forEach(file => {
+            const uploadTime = new Date(file.upload_date); 
+            const uploadDateString = uploadTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             const fileElement = document.createElement('div');
             fileElement.className = 'file-item';
-            fileElement.textContent = `${file.file_name} (${file.file_path})`;
+            fileElement.textContent = `${file.file_name} - You opened . ${uploadDateString}, Location: ${file.location}, Owner: ${file.owner}`;
             fileListContainer.appendChild(fileElement);
         });
     })
     .catch(err => console.error('Error fetching files:', err));
 }
+
+function fetchUserFolders() {
+    fetch('/get-user-folders')
+    .then(response => response.json())
+    .then(folders => {
+        const folderListContainer = document.getElementById('folderListContainer');
+        folderListContainer.innerHTML = ''; 
+
+        folders.forEach(folder => {
+            const creationDate = new Date(folder.creation_date); 
+            const creationDateString = creationDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            const folderElement = document.createElement('div');
+            folderElement.className = 'folder-item';
+            folderElement.textContent = `${folder.folder_name} - Owner: ${folder.owner}, Location: ${folder.folder_path}, Creation Date: ${creationDateString}`; // Updated to folder.owner
+            folderListContainer.appendChild(folderElement);
+        });
+    })
+    .catch(err => console.error('Error fetching folders:', err));
+}
+
+
+
+
+
+
+
 function createNewFolderPrompt() {
     const folderName = prompt("Please enter the folder name:");
     if (!folderName) {

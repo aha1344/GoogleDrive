@@ -392,3 +392,29 @@
     top: 20px;  /* adjust based on your layout */
 }
 
+
+/* Table container styling */
+.file-table-container {
+    margin: 20px;
+    overflow-x: auto;
+}
+
+/* Table styling */
+#file-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#file-table th, #file-table td {
+    text-align: left;
+    padding: 8px;
+}
+
+#file-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#file-table th {
+    background-color: #4CAF50;
+    color: white;
+}
