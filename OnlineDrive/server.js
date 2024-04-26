@@ -9,6 +9,7 @@ const multer = require('multer');
 const app = express();
 const PORT = 3000;
 
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -49,7 +50,7 @@ app.use('/uploads', express.static('uploads'));
 
 // Route to redirect to signup page
 app.get('/', (req, res) => {
-    res.redirect('/signup');
+    res.redirect('/signin');
 });
 
 // Route to serve signup page
@@ -208,31 +209,44 @@ app.post('/upload', upload.single('file'), function (req, res) {
 
 // Backend Endpoint to Get User Files
 app.get('/get-user-files', function (req, res) {
-    const userId = req.session.userId; // Or get from a token in request headers
-    const sql = `SELECT files.*, users.first_name AS owner, files.file_path AS location, files.upload_date AS reason_suggested
-                 FROM files
-                 INNER JOIN users ON files.user_id = users.id
-                 WHERE files.user_id = ?`;
-    db.query(sql, [userId], function (err, results) {
+    const userId = req.session.userId; // Ensure user is authenticated
+    const searchQuery = req.query.query || ''; // Retrieve the search query from the URL
+
+    // Modify the SQL query to include a LIKE clause for searching by file name
+    const sql = `
+        SELECT files.*, users.first_name AS owner, files.file_path AS location, files.upload_date AS reason_suggested
+        FROM files
+        INNER JOIN users ON files.user_id = users.id
+        WHERE files.user_id = ? AND files.file_name LIKE ?
+    `;
+
+    db.query(sql, [userId, `%${searchQuery}%`], function (err, results) {
         if (err) {
             return res.status(500).json({ message: 'Database error: ' + err.message });
         }
         res.json(results);
     });
 });
+
 app.get('/get-user-folders', function (req, res) {
     const userId = req.session.userId; // Or get from a token in request headers
-    const sql = `SELECT folders.*, users.first_name AS owner
-                 FROM folders
-                 INNER JOIN users ON folders.user_id = users.id
-                 WHERE folders.user_id = ?`;
-    db.query(sql, [userId], function (err, results) {
+    const searchQuery = req.query.query || ''; // Retrieve the search query from the URL
+
+    const sql = `
+        SELECT folders.*, users.first_name AS owner
+        FROM folders
+        INNER JOIN users ON folders.user_id = users.id
+        WHERE folders.user_id = ? AND folders.folder_name LIKE ?
+    `;
+
+    db.query(sql, [userId, `%${searchQuery}%`], function (err, results) {
         if (err) {
             return res.status(500).json({ message: 'Database error: ' + err.message });
         }
         res.json(results);
     });
 });
+
 
 
 // Start the server

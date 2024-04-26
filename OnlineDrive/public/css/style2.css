@@ -379,18 +379,34 @@
 .layout-container2{
     display: flex;
     margin-right: 10px;
+    
 }
-.kebab-menu {
-    display: none;  /* initially hidden */
-    position: absolute;  /* positioned relative to its parent */
-    background-color: #f9f9f9;
-    border: 1px solid #ccc;
+/* List Layout */
+.list-layout .file-item,
+.list-layout .folder-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+/* Grid Layout */
+.grid-layout {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Change this value to adjust the number of columns */
+    grid-gap: 20px; /* Adjust the spacing between items */
+    grid-auto-flow: dense; /* Items will fill in the available space */
+}
+  
+.grid-layout .file-item,
+.grid-layout .folder-item {
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: gray;
     border-radius: 5px;
-    padding: 5px;
-    z-index: 1000;  /* high z-index to ensure it appears on top */
-    right: 10px;  /* adjust based on your layout */
-    top: 20px;  /* adjust based on your layout */
 }
+
+  
 
 
 /* Table container styling */
@@ -417,4 +433,118 @@
 #file-table th {
     background-color: #4CAF50;
     color: white;
+}
+/* Add this to your existing CSS */
+#create-folder-form {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.4); /* Black with opacity */
+    
+}
+  
+#create-folder-form .modal-content {
+    background-color: #fefefe;
+    margin: 20% auto; /* 15% from the top and centered horizontally */
+    padding: 20px;
+    border: 2px ;
+    width: 20%; /* Adjust width of the modal content */
+    border-radius: 20px;
+}
+.close {
+    color: blue;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#folder-name-input {
+    width: calc(100% - 40px); /* Full width minus padding */
+    padding: 10px 20px;
+    margin-bottom: 20px; /* Space before the button */
+    border: 1px solid blue;
+    box-sizing: border-box;
+}
+#NewF{
+    font-size: large;
+}
+
+#create-folder-button {
+    background-color: blue;
+    color: white;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+#create-folder-button:hover {
+    opacity: 0.8;
+}
+/* CSS for the modal, inspired by the context menu in the image */
+.modal1 {
+    position: fixed; /* Fixed position to place the modal above other content */
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Offset the modal to truly center it */
+    background-color: #FFFFFF; /* Background color of the modal */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D effect */
+    width: auto; /* Auto width to adjust to content */
+    padding: 16px; /* Padding inside the modal */
+    border-radius: 8px; /* Rounded corners of the modal */
+    z-index: 1000; /* High z-index to ensure it's on top */
+    display: none; /* Initially hide the modal */
+}
+
+.modal1 .modal-content {
+    color: #5f6368; /* Text color for modal content */
+    font-family: 'Roboto', sans-serif; /* Font style similar to the image */
+    font-size: 14px; /* Font size similar to the image */
+    line-height: 1.4; /* Line height for better readability */
+}
+
+/* CSS for delete and download buttons positioned above each other */
+.modal1 .modal-buttons {
+    display: flex; /* Flex container for the buttons */
+    flex-direction: column; /* Stack buttons vertically */
+    align-items: flex-start; /* Align buttons to the start of the modal */
+    margin-top: 20px; /* Space between content and buttons */
+}
+
+.modal1 .modal-buttons button {
+    padding: 8px 16px; /* Padding inside the buttons */
+    margin-bottom: 8px; /* Space between buttons */
+    border: 1px solid #dadce0; /* Border color similar to the image */
+    border-radius: 4px; /* Rounded corners for buttons */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-family: 'Roboto', sans-serif; /* Font style similar to the image */
+    font-size: 14px; /* Font size similar to the image */
+    font-weight: 500; /* Font weight for the text */
+    background-color: transparent; /* Transparent background */
+    color: #5f6368; /* Text color similar to the buttons in the image */
+    text-align: left; /* Align text to the left */
+    width: 100%; /* Button width to fill the modal */
+}
+
+.modal1 .modal-buttons button:hover {
+    background-color: #f1f3f4; /* Slight background color on hover */
+}
+
+.modal1 .modal-buttons button.delete {
+    color: #d93025; /* Red text color for delete action */
+}
+
+.modal1 .modal-buttons button.download {
+    color: #1a73e8; /* Blue text color for download action */
 }
