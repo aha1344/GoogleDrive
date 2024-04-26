@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const storageContent = document.getElementById('storageContent');
 
     function showContent(contentElement) {
+        const allContents = document.querySelectorAll('.content');
         allContents.forEach(content => {
             content.classList.add('hidden');
         });
@@ -306,20 +307,18 @@ function uploadFile(file) {
     })
     .catch(error => console.error('Error uploading file:', error));
 }
+// Global variable to keep track of the current open modal
+var currentModal = null;
 
-// Function to create and show the modal
 function modal1(content, onDelete) {
-    // Check if an existing modal is open, if yes then remove it
-    const existingModal = document.querySelector('.modal1');
-    if (existingModal) {
-        existingModal.remove();
+    // Close the current open modal if there is one
+    if (currentModal) {
+        currentModal.remove();
+        currentModal = null;
     }
 
-    // Create modal element
     const modal = document.createElement('div');
     modal.className = 'modal1';
-    
-    // Add content to modal
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-buttons">
@@ -328,30 +327,57 @@ function modal1(content, onDelete) {
             </div>
         </div>
     `;
-    
-    // Append modal to body
     document.body.appendChild(modal);
-    
-    // Show modal
     modal.style.display = 'block';
-
-    // Position modal right under the clicked element
     const clickedElementRect = this.getBoundingClientRect();
-    const modalHeight = modal.clientHeight;
     modal.style.top = `${clickedElementRect.bottom}px`;
     modal.style.left = `${clickedElementRect.left}px`;
 
-    // Close modal when clicked outside of it
     modal.addEventListener('click', function(event) {
         if (event.target === modal) {
             modal.remove();
+            currentModal = null;
         }
     });
 
-    // Add event listener to delete button
     const deleteButton = modal.querySelector('.delete');
-    deleteButton.addEventListener('click', onDelete);
+    deleteButton.addEventListener('click', function() {
+        onDelete();
+        modal.remove();
+        currentModal = null; // Clear the current modal since it's being closed
+    });
+
+    currentModal = modal; // Set the new modal as the current modal
 }
+
+function deleteItem(itemId, itemType, callback) {
+    fetch('/delete-item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ itemId, itemType })
+    })
+    .then(response => response.text())
+    .then(text => {
+        alert(text);
+        if (itemType === 'file') {
+            fetchUserFiles();
+        } else if (itemType === 'folder') {
+            fetchUserFolders();
+        }
+        if (typeof callback === 'function') {
+            callback(); // Call the callback function after deletion
+        }
+    })
+    .catch(err => {
+        console.error('Error deleting item:', err);
+        alert('Error deleting item');
+    });
+}
+
+
+
 
 
 // Function to fetch user files and display them
@@ -369,14 +395,13 @@ function fetchUserFiles(query = '') {
             fileElement.className = 'file-item';
             fileElement.textContent = `${file.file_name} - You opened ${uploadDateString}, Location: ${file.location}, Owner: ${file.owner}`;
             
-            // Add click event listener to display modal with file information
+            // Add click event listener to display modal with file information and delete functionality
             fileElement.addEventListener('click', function() {
                 modal1.call(fileElement, fileElement.textContent, () => {
-                    // Here you can add the delete functionality for the file
-                    // For example:
-                    // deleteFile(file.id);
+                    // Delete the file
+                    deleteItem(file.id, 'file');
                     console.log('File deleted:', file.file_name);
-                    modal.remove(); // Remove the modal after deletion
+                    currentModal.remove();
                 });
             });
 
@@ -401,14 +426,13 @@ function fetchUserFolders(query = '') {
             folderElement.className = 'folder-item';
             folderElement.textContent = `${folder.folder_name} - Owner: ${folder.owner}, Location: ${folder.folder_path}, Creation Date: ${creationDateString}`;
 
-            // Add click event listener to display modal with folder information
+            // Add click event listener to display modal with folder information and delete functionality
             folderElement.addEventListener('click', function() {
                 modal1.call(folderElement, folderElement.textContent, () => {
-                    // Here you can add the delete functionality for the folder
-                    // For example:
-                    // deleteFolder(folder.id);
+                    // Delete the folder
+                    deleteItem(folder.id, 'folder');
                     console.log('Folder deleted:', folder.folder_name);
-                    modal.remove(); // Remove the modal after deletion
+                    currentModal.remove();
                 });
             });
 
@@ -452,17 +476,8 @@ function handleButtonClick(buttonId) {
   }
 }
 
-
-
-
 // Call this function on search bar keyup to test
 document.getElementById('search-bar').addEventListener('keyup', handleSearch);
-
-
-
-
-
-
 
 // Function to handle closing the modal
 function closeModal() {
@@ -526,7 +541,9 @@ function createNewFolder(folderName) {
     .then(response => response.json()) // Assuming the server responds with JSON
     .then(result => {
         alert(result.message); // Assuming the result has a 'message' field
-        fetchUserFiles(); // Make sure this function is defined
+        fetchUserFolders(); // Fetch folders after creating a new one
     })
     .catch(error => console.error('Error creating folder:', error));
 }
+
+

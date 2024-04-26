@@ -248,6 +248,55 @@ app.get('/get-user-folders', function (req, res) {
 });
 
 
+app.post('/delete-item', (req, res) => {
+    const { itemId, itemType } = req.body;
+
+    if (itemType === 'file') {
+        // Delete file record from the database
+        db.query('DELETE FROM files WHERE id = ?', [itemId], (err, result) => {
+            if (err) {
+                return res.status(500).send('Database error: ' + err.message);
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).send('File not found in the database');
+            }
+            res.send('File deleted successfully!');
+        });
+    } else if (itemType === 'folder') {
+        // Delete folder and its contents from the database and filesystem
+        db.query('SELECT folder_path FROM folders WHERE id = ?', [itemId], (err, result) => {
+            if (err) {
+                return res.status(500).send('Database error: ' + err.message);
+            }
+            if (result.length === 0) {
+                return res.status(404).send('Folder not found in the database');
+            }
+
+            const folderPath = result[0].folder_path;
+
+            // Delete folder and its contents from the filesystem
+            fs.rmdir(folderPath, { recursive: true }, (err) => {
+                if (err) {
+                    return res.status(500).send('Error deleting folder and its contents from filesystem: ' + err.message);
+                }
+
+                // Once folder and its contents are deleted from filesystem, delete its record from the database
+                db.query('DELETE FROM folders WHERE id = ?', [itemId], (err, result) => {
+                    if (err) {
+                        return res.status(500).send('Database error: ' + err.message);
+                    }
+                    res.send('Folder deleted successfully!');
+                });
+            });
+        });
+    } else {
+        res.status(400).send('Invalid item type');
+    }
+});
+
+
+
+
 
 // Start the server
 app.listen(PORT, () => {
