@@ -293,11 +293,6 @@ app.post('/delete-item', (req, res) => {
         res.status(400).send('Invalid item type');
     }
 });
-
-
-
-
-
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

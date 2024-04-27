@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleNextButtonClick() {
         if (passwordContainer.style.display === 'none') {
             if (!isValidEmail(emailInput.value)) {
-                emailError.textContent = 'Email format is invalid';
                 emailError.style.display = 'block';
                 return;
             }
@@ -32,7 +31,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     passwordContainer.style.display = 'block';
                     emailError.style.display = 'none';
-                    nextButton.onclick = handlePasswordCheck;  // Change the button's function to check the password next
+                    nextButton.removeEventListener('click', handleNextButtonClick); // Remove the previous event listener
+                    nextButton.addEventListener('click', handlePasswordCheck);  // Add event listener for password check
                 }
             })
             .catch(err => {
@@ -57,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 passwordError.style.display = 'block';
             } else {
                 window.location.href = '/index';  // Redirect on successful login
-                passwordError.style.display = 'none';
             }
         })
         .catch(err => {

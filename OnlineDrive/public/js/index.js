@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const storageContent = document.getElementById('storageContent');
 
     function showContent(contentElement) {
-        const allContents = document.querySelectorAll('.content');
         allContents.forEach(content => {
             content.classList.add('hidden');
         });
@@ -43,11 +42,13 @@ document.addEventListener('DOMContentLoaded', () => {
     homeBtn.addEventListener('click', () => {
         showContent(homeContent);
         fetchUserFiles(); 
+        document.title = 'Home - Google Drive'; 
     });
 
     myDriveBtn.addEventListener('click', () => {
         showContent(myDriveContent);
         fetchUserFiles(); 
+        document.title = 'My Drive - Google Drive'; 
     });
 
     computersBtn.addEventListener('click', () => {
@@ -124,6 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setupButtonHandlers();
     setupFileHandlers();
 });
+
+
+
+
+
+
 
 document.getElementById('create-folder-btn').addEventListener('click', function() {
     const folderName = prompt("Enter the name for the new folder:");
@@ -307,18 +314,23 @@ function uploadFile(file) {
     })
     .catch(error => console.error('Error uploading file:', error));
 }
+
 // Global variable to keep track of the current open modal
 var currentModal = null;
 
+// Function to create and show the modal
 function modal1(content, onDelete) {
-    // Close the current open modal if there is one
-    if (currentModal) {
-        currentModal.remove();
-        currentModal = null;
+    // Check if an existing modal is open, if yes then remove it
+    const existingModal = document.querySelector('.modal1');
+    if (existingModal) {
+        existingModal.remove();
     }
 
+    // Create modal element
     const modal = document.createElement('div');
     modal.className = 'modal1';
+    
+    // Add content to modal
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-buttons">
@@ -327,29 +339,32 @@ function modal1(content, onDelete) {
             </div>
         </div>
     `;
+    
+    // Append modal to body
     document.body.appendChild(modal);
+    
+    // Show modal
     modal.style.display = 'block';
+
+    // Position modal right under the clicked element
     const clickedElementRect = this.getBoundingClientRect();
+    const modalHeight = modal.clientHeight;
     modal.style.top = `${clickedElementRect.bottom}px`;
     modal.style.left = `${clickedElementRect.left}px`;
 
+    // Close modal when clicked outside of it
     modal.addEventListener('click', function(event) {
         if (event.target === modal) {
             modal.remove();
-            currentModal = null;
         }
     });
 
+    // Add event listener to delete button
     const deleteButton = modal.querySelector('.delete');
-    deleteButton.addEventListener('click', function() {
-        onDelete();
-        modal.remove();
-        currentModal = null; // Clear the current modal since it's being closed
-    });
-
-    currentModal = modal; // Set the new modal as the current modal
+    deleteButton.addEventListener('click', onDelete);
 }
 
+// Function to delete an item (file or folder)
 function deleteItem(itemId, itemType, callback) {
     fetch('/delete-item', {
         method: 'POST',
@@ -376,75 +391,129 @@ function deleteItem(itemId, itemType, callback) {
     });
 }
 
-
-
-
-
 // Function to fetch user files and display them
 function fetchUserFiles(query = '') {
     fetch(`/get-user-files?query=${encodeURIComponent(query)}`)
-    .then(response => response.json())
-    .then(files => {
-        const fileListContainer = document.getElementById('fileListContainer');
-        fileListContainer.innerHTML = '';
+        .then(response => response.json())
+        .then(files => {
+            const fileListContainer = document.getElementById('fileListContainer');
+            fileListContainer.innerHTML = '';
 
-        files.forEach(file => {
-            const uploadTime = new Date(file.upload_date);
-            const uploadDateString = uploadTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            const fileElement = document.createElement('div');
-            fileElement.className = 'file-item';
-            fileElement.textContent = `${file.file_name} - You opened ${uploadDateString}, Location: ${file.location}, Owner: ${file.owner}`;
-            
-            // Add click event listener to display modal with file information and delete functionality
-            fileElement.addEventListener('click', function() {
-                modal1.call(fileElement, fileElement.textContent, () => {
-                    // Delete the file
-                    deleteItem(file.id, 'file');
-                    console.log('File deleted:', file.file_name);
-                    currentModal.remove();
+            files.forEach(file => {
+                const uploadTime = new Date(file.upload_date);
+                const uploadDateString = uploadTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const fileElement = document.createElement('div');
+                fileElement.className = 'file-item';
+                
+                // Set file name with ID
+                const fileNameElement = document.createElement('div');
+                fileNameElement.id = `file-name-${file.id}`;
+                fileNameElement.textContent = file.file_name;
+                fileElement.appendChild(fileNameElement);
+                
+
+                // Set upload date with ID
+                const uploadDateElement = document.createElement('div');
+                uploadDateElement.id = `upload-date-${file.id}`;
+                uploadDateElement.textContent = `You opened ${uploadDateString}`;
+                fileElement.appendChild(uploadDateElement);
+
+                // Set owner with ID
+                const ownerElement = document.createElement('div');
+                ownerElement.id = `file-owner-${file.id}`;
+                ownerElement.textContent = file.owner;
+                fileElement.appendChild(ownerElement);
+
+                // Set location with ID
+                const locationElement = document.createElement('div');
+                locationElement.id = `file-location-${file.id}`;
+                locationElement.textContent = file.location;
+                fileElement.appendChild(locationElement);
+
+                
+
+                // Add click event listener to display modal with file information
+                fileElement.addEventListener('click', function() {
+                    modal1.call(fileElement, fileElement.textContent, () => {
+                        // Here you can add the delete functionality for the file
+                        deleteItem(file.id, 'file', () => {
+                            console.log('File deleted:', file.file_name);
+                            fetchUserFiles(); // Refresh file list after deletion
+                        });
+                    });
                 });
-            });
 
-            fileListContainer.appendChild(fileElement);
-        });
-    })
-    .catch(err => console.error('Error fetching files:', err));
+                fileListContainer.appendChild(fileElement);
+            });
+        })
+        .catch(err => console.error('Error fetching files:', err));
 }
+
 
 // Function to fetch user folders and display them
 function fetchUserFolders(query = '') {
     fetch(`/get-user-folders?query=${encodeURIComponent(query)}`)
-    .then(response => response.json())
-    .then(folders => {
-        const folderListContainer = document.getElementById('folderListContainer');
-        folderListContainer.innerHTML = '';
+        .then(response => response.json())
+        .then(folders => {
+            const folderListContainer = document.getElementById('folderListContainer');
+            folderListContainer.innerHTML = '';
 
-        folders.forEach(folder => {
-            const creationDate = new Date(folder.creation_date);
-            const creationDateString = creationDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-            const folderElement = document.createElement('div');
-            folderElement.className = 'folder-item';
-            folderElement.textContent = `${folder.folder_name} - Owner: ${folder.owner}, Location: ${folder.folder_path}, Creation Date: ${creationDateString}`;
+            folders.forEach(folder => {
+                const creationDate = new Date(folder.creation_date);
+                const creationDateString = creationDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                const folderElement = document.createElement('div');
+                folderElement.className = 'folder-item';
+                
+                // Set folder name with ID
+                const folderNameElement = document.createElement('div');
+                folderNameElement.id = `folder-name-${folder.id}`;
+                folderNameElement.textContent = folder.folder_name;
+                folderElement.appendChild(folderNameElement);
+               
+                // Set creation date with ID
+                const folderCreationDateElement = document.createElement('div');
+                folderCreationDateElement.id = `folder-creation-date-${folder.id}`;
+                folderCreationDateElement.textContent = `Created on ${creationDateString}`;
+                folderElement.appendChild(folderCreationDateElement);
 
-            // Add click event listener to display modal with folder information and delete functionality
-            folderElement.addEventListener('click', function() {
-                modal1.call(folderElement, folderElement.textContent, () => {
-                    // Delete the folder
-                    deleteItem(folder.id, 'folder');
-                    console.log('Folder deleted:', folder.folder_name);
-                    currentModal.remove();
+                // Set folder owner with ID
+                const folderOwnerElement = document.createElement('div');
+                folderOwnerElement.id = `folder-owner-${folder.id}`;
+                folderOwnerElement.textContent = `${folder.owner}`;
+                folderElement.appendChild(folderOwnerElement);
+
+                // Set folder location with ID
+                const folderLocationElement = document.createElement('div');
+                folderLocationElement.id = `folder-location-${folder.id}`;
+                folderLocationElement.textContent = `${folder.folder_path}`;
+                folderElement.appendChild(folderLocationElement);
+
+                
+                 
+ 
+
+                // Add click event listener to display modal with folder information
+                folderElement.addEventListener('click', function() {
+                    modal1.call(folderElement, folderElement.textContent, () => {
+                        // Here you can add the delete functionality for the folder
+                        deleteItem(folder.id, 'folder', () => {
+                            console.log('Folder deleted:', folder.folder_name);
+                            fetchUserFolders(); // Refresh folder list after deletion
+                        });
+                    });
                 });
-            });
 
-            folderListContainer.appendChild(folderElement);
-        });
-    })
-    .catch(err => console.error('Error fetching folders:', err));
+                folderListContainer.appendChild(folderElement);
+            });
+        })
+        .catch(err => console.error('Error fetching folders:', err));
 }
+
 
 // Call the fetch functions when needed
 fetchUserFiles();
 fetchUserFolders();
+
 
 function handleSearch() {
     const searchQuery = document.getElementById('search-bar').value.trim();
@@ -476,8 +545,13 @@ function handleButtonClick(buttonId) {
   }
 }
 
-// Call this function on search bar keyup to test
 document.getElementById('search-bar').addEventListener('keyup', handleSearch);
+
+
+
+
+
+
 
 // Function to handle closing the modal
 function closeModal() {
@@ -541,9 +615,7 @@ function createNewFolder(folderName) {
     .then(response => response.json()) // Assuming the server responds with JSON
     .then(result => {
         alert(result.message); // Assuming the result has a 'message' field
-        fetchUserFolders(); // Fetch folders after creating a new one
+        fetchUserFiles(); // Make sure this function is defined
     })
     .catch(error => console.error('Error creating folder:', error));
 }
-
-

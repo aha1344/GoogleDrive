@@ -1,31 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <link rel="stylesheet" href="/css/signin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <title>Sign In</title>
-    <link rel="icon" href="Pics/Google_Drive_logo.png" type="image/x-icon">
 </head>
+
 <body>
     <div class="container">
         <div class="left">
-            <h1 class="header">Sign in</h1>
-            <h4 class="header2">to continue to Google Drive</h4>
+            <img src="/Pics/google.png" alt="Google Drive Logo" class="logo">
+            <h1 class="header">Sign in </h1>
+            <h4 class="header2"> to continue to Google Drive</h4>
         </div>
         <div class="right">
             <div class="form-container">
                 <p>Email:</p>
                 <input type="email" class="form-field" placeholder="Email" name="email">
-                <span id="emailError" class="invalid" style="display: none;">Email does not exist</span> <!-- Error message for email -->
-                
+                <a id="emailError" style="display: none;" class="invalid">Email format is invalid</a>
                 <div class="password-container" style="display: none;">
                     <p>Password:</p>
                     <input id="password" type="password" class="form-field" placeholder="Password" name="password">
                     <a id="eye" class="fa fa-eye" onclick="togglePasswordVisibility()" aria-hidden="true"></a>
-                    <span id="passwordError" class="invalid" style="display: none;">Password is incorrect</span> <!-- Error message for password -->
+                    <a id="passwordError" style="display: none;" class="invalid">Password is incorrect</a>
                     <a href="/forgotpassword" class="forgot">Forgot password?</a>
                 </div>
-                
                 <div class="button-container">
                     <button class="create-account" onclick="goToSignup()">Create Account</button>
                     <button id="next-button" class="next-button">Next</button>
@@ -33,7 +32,12 @@
             </div>
         </div>
     </div>
-    
+    <div class="link-container">
+        <a href="https://www.example.com/help" class="link-button">Help</a>
+        <a href="https://www.example.com/privacy" class="link-button">Privacy</a>
+        <a href="https://www.example.com/terms" class="link-button">Terms</a>
+    </div>
     <script src="/js/signin.js"></script>
 </body>
+
 </html>

@@ -84,6 +84,8 @@
                 <input id="search-bar" type="search" placeholder="Search in Drive" onkeyup="handleSearch()">
                 <button id="setting-filter"><img src="/Pics/settings.png" alt="" id="setting-filter-img"></button>
             </div>
+        
+            
 
             <div id="main-box">
 
@@ -211,9 +213,36 @@
                         </div>
 
                         
+                        
                     </div>
                     <br>
 
+                    <div class="Layer3">
+                        <div class="file-header">
+                            <div class="file-column" id="name">Name</div>
+                            <div class="file-column" id="owner">Owner</div>
+                            <div class="file-column" id="modified">Last modified</div>
+                            <div class="file-column" id="filesize">File size</div>
+                            <div class="more-btn">
+                                <div class="file-column" id="dropdown-button" onclick="toggleDropdown(this)"><span id="more"><img src="/Pics/dots.png" alt="" id="more-img"></span></div>
+                                <div class="dropdown-content" >
+                                    <div class="show-more">Btn</div>
+                                    <button></button>
+                                    <button></button>  
+                                </div> 
+                            </div>
+                        </div>
+                        <div class="file-content">
+                            <div class="name-content">
+                                <div id="fileListContainer" class="list-layout">
+                                </div>
+                                <div id="folderListContainer" class="list-layout">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
                 </div>
                 
                 <div class="content hidden" id="computersContent">

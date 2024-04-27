@@ -32,6 +32,7 @@
     margin-bottom: 10px ;
     padding: 5px;
     margin-left: 40px;
+    position: relative;
 }
 #search-button {
     border: none;
@@ -79,6 +80,8 @@
     width: 18px;
     height: 18px;
 }
+
+
 
 
 /* main-box  */
@@ -155,10 +158,10 @@
 /* creating a table file: */
 .file-header {
     display: flex;
-    /* justify-content: space-between; */
+    justify-content: left;
     border-bottom: 1px solid #C7C7C7;
-    
-    /* vertical-align: middle; */
+    margin-top: 20px;
+    vertical-align: middle;
 }
 
 .file-column {
@@ -173,7 +176,9 @@
 
 
 #name{
-    padding-right: 400px;
+    display: flex;
+    justify-content: left;
+    padding-right: 200px;
 }
 
 #more{
@@ -384,8 +389,8 @@
 /* List Layout */
 .list-layout .file-item,
 .list-layout .folder-item {
-  display: flex;
-  justify-content: space-between;
+  /* display: flex;
+  justify-content: space-between; */
   padding: 10px;
   border-bottom: 1px solid #ccc;
 }
@@ -546,5 +551,33 @@
 }
 
 .modal1 .modal-buttons button.download {
-    color: #1a73e8; /* Blue text color for download action */
+    color: #1a73e8; 
+}
+
+
+
+div[id^="folder-name-"], div[id^="file-name-"]{
+    display: flex;
+    justify-content: left;
+    padding-right: 235px;
+    width: 15%;
+}
+
+div[id^="folder-creation-date-"]{
+    padding-right: 70px;
+}
+div[id^="upload-date-"]{
+    padding-right: 50px;
+}
+
+div[id^="folder-location-"], div[id^="file-location-"]{
+    overflow: hidden; 
+    white-space: nowrap;
+    text-overflow: ellipsis; 
+    max-width: 150px; 
+    direction: rtl;
+}
+
+div[id^="folder-owner-"], div[id^="file-owner-"]{
+    padding-right: 80px;
 }
