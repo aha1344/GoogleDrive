@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var passwordContainer = document.querySelector('.password-container');
     var emailInput = document.querySelector('input[name="email"]');
     var passwordInput = document.querySelector('input[name="password"]');
+    var rememberMeCheckbox = document.querySelector('input[name="rememberMe"]'); // Remember Me checkbox
     var emailError = document.getElementById('emailError');
     var passwordError = document.getElementById('passwordError');
 
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/signin/password', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ email: emailInput.value, password: passwordInput.value })
+            body: JSON.stringify({ email: emailInput.value, password: passwordInput.value, rememberMe: rememberMeCheckbox.checked })
         })
         .then(res => res.json())
         .then(data => {
@@ -108,3 +109,4 @@ function togglePasswordVisibility() {
 function goToSignup() {
     window.location.href = "/signup";
 }
+

@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const path = require('path');
 const multer = require('multer');
+const archiver = require('archiver');
 
 const app = express();
 const PORT = 3000;
@@ -14,23 +15,26 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 const session = require('express-session');
+
+
 app.use(session({
     secret: 'your_secret_key',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
+    cookie: { maxAge: 60000 * 60 * 24 * 30 }  // Long-lived cookie, 30 days
 }));
-
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/') // Ensure the uploads directory exists
     },
     filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
+        cb(null, file.originalname) // Save the original filename
     }
 });
 
 const upload = multer({ storage: storage });
+
 
 // MySQL connection setup
 const db = mysql.createConnection({
@@ -74,8 +78,75 @@ app.post('/share', (req, res) => {
     // Logic to share the file
 });
 
+// Route to handle file download
 app.post('/download', (req, res) => {
-    // Logic to download the file
+    const { itemId, itemType } = req.body;
+
+    if (itemType === 'file') {
+        // Retrieve file path from the database based on file ID
+        const sql = 'SELECT file_path FROM files WHERE id = ?';
+        db.query(sql, [itemId], (err, results) => {
+            if (err) {
+                return res.status(500).send('Database error: ' + err.message);
+            }
+            if (results.length === 0) {
+                return res.status(404).send('File not found in the database');
+            }
+
+            const filePath = results[0].file_path;
+
+
+            // Stream the file to the client for download
+            res.download(filePath, (err) => {
+                if (err) {
+                    return res.status(500).send('Error downloading file: ' + err.message);
+                }
+            });
+        });
+    } else if (itemType === 'folder') {
+        // Retrieve folder path from the database based on folder ID
+        const sql = 'SELECT folder_path FROM folders WHERE id = ?';
+        db.query(sql, [itemId], (err, results) => {
+            if (err) {
+                return res.status(500).send('Database error: ' + err.message);
+            }
+            if (results.length === 0) {
+                return res.status(404).send('Folder not found in the database');
+            }
+
+            const folderPath = results[0].folder_path;
+
+            // Compress the folder into a ZIP file
+            const zipFilePath = `${folderPath}.zip`;
+            const output = fs.createWriteStream(zipFilePath);
+            const archive = archiver('zip');
+
+            output.on('close', () => {
+                // Stream the ZIP file to the client for download
+                res.download(zipFilePath, (err) => {
+                    if (err) {
+                        return res.status(500).send('Error downloading ZIP file: ' + err.message);
+                    }
+                    // Delete the ZIP file after download
+                    fs.unlink(zipFilePath, (err) => {
+                        if (err) {
+                            console.error('Error deleting ZIP file:', err);
+                        }
+                    });
+                });
+            });
+
+            output.on('error', (err) => {
+                return res.status(500).send('Error creating ZIP file: ' + err.message);
+            });
+
+            archive.pipe(output);
+            archive.directory(folderPath, false); // Compress folder contents without the folder itself
+            archive.finalize();
+        });
+    } else {
+        res.status(400).send('Invalid item type');
+    }
 });
 
 app.post('/rename', (req, res) => {
@@ -142,7 +213,7 @@ app.post('/create-folder', (req, res) => {
         return res.status(401).send("Please log in to create folders.");
     }
 
-    const userDir = path.join(__dirname, 'uploads', String(userId)); // Base directory path for the user
+    const userDir = path.join(__dirname, 'ploads', String(userId)); // Base directory path for the user
     const folderPath = path.join(userDir, folderName);
 
     fs.mkdir(folderPath, { recursive: true }, (err) => {
@@ -161,7 +232,7 @@ app.post('/create-folder', (req, res) => {
 
 // Sign-in with password route
 app.post('/signin/password', (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const sql = `SELECT id, password FROM users WHERE email = ?`;
 
     db.query(sql, [email], (err, results) => {
@@ -176,6 +247,11 @@ app.post('/signin/password', (req, res) => {
                 }
                 if (isMatch) {
                     req.session.userId = user.id; // Set user ID in session
+                    if (rememberMe) {
+                        req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // Extend session if 'Remember Me' is checked
+                    } else {
+                        req.session.cookie.expires = false; // Session ends when browser closes
+                    }
                     res.json({ message: 'Logged in successfully', error: false });
                 } else {
                     res.json({ message: 'Password is incorrect', error: true });
@@ -187,6 +263,7 @@ app.post('/signin/password', (req, res) => {
     });
 });
 
+
 // File upload route
 app.post('/upload', upload.single('file'), function (req, res) {
     const userId = req.session.userId; // Ensure you're retrieving the user ID correctly, possibly from a session or JWT token
@@ -194,7 +271,7 @@ app.post('/upload', upload.single('file'), function (req, res) {
     if (!file) {
         return res.status(400).send('Please upload a file.');
     }
-    const userDir = `uploads/${userId}`; // Ensuring files are stored under user-specific directories
+    const userDir = `Uploads/`; // Ensuring files are stored under user-specific directories
     const filePath = `${userDir}/${file.originalname}`;
 
     const insertSql = 'INSERT INTO files (user_id, file_name, file_path, upload_date, ReasonSuggested, Location) VALUES (?, ?, ?, NOW(), ?, ?)';
@@ -293,6 +370,11 @@ app.post('/delete-item', (req, res) => {
         res.status(400).send('Invalid item type');
     }
 });
+
+
+
+
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

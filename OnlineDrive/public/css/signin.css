@@ -97,6 +97,12 @@ color: #4285f4;
     top: -15%;
     
 }
+.checkbox-container {
+    margin-bottom: 10px; 
+    color: #000000; 
+    font-size: 0.9rem; 
+}
+
 .link-button {
     background: none;
     border: none;
