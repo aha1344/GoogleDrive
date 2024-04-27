@@ -230,7 +230,6 @@ app.post('/create-folder', (req, res) => {
     });
 });
 
-// Sign-in with password route
 app.post('/signin/password', (req, res) => {
     const { email, password, rememberMe } = req.body;
     const sql = `SELECT id, password FROM users WHERE email = ?`;
@@ -262,6 +261,7 @@ app.post('/signin/password', (req, res) => {
         }
     });
 });
+
 
 
 // File upload route

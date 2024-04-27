@@ -3,9 +3,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var passwordContainer = document.querySelector('.password-container');
     var emailInput = document.querySelector('input[name="email"]');
     var passwordInput = document.querySelector('input[name="password"]');
-    var rememberMeCheckbox = document.querySelector('input[name="rememberMe"]'); // Remember Me checkbox
+    var rememberMeCheckbox = document.querySelector('input[name="rememberMe"]');
     var emailError = document.getElementById('emailError');
     var passwordError = document.getElementById('passwordError');
+    var isEmailValidated = false; // To track the state of email validation
 
     // Function to validate email format
     function isValidEmail(email) {
@@ -14,11 +15,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to handle click event on Next button
     function handleNextButtonClick() {
-        if (passwordContainer.style.display === 'none') {
+        if (!isEmailValidated) {
             if (!isValidEmail(emailInput.value)) {
+                emailError.textContent = 'Email format is invalid';
                 emailError.style.display = 'block';
                 return;
             }
+            emailError.style.display = 'none';
             fetch('/signin/email', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -27,13 +30,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(data => {
                 if (data.error) {
-                    emailError.textContent = data.message;  // 'Email does not exist'
+                    emailError.textContent = data.message;
                     emailError.style.display = 'block';
                 } else {
-                    passwordContainer.style.display = 'block';
+                    passwordContainer.style.display = 'block'; // Show password input
                     emailError.style.display = 'none';
-                    nextButton.removeEventListener('click', handleNextButtonClick); // Remove the previous event listener
-                    nextButton.addEventListener('click', handlePasswordCheck);  // Add event listener for password check
+                    nextButton.textContent = 'Sign In'; // Change button text to 'Sign In'
+                    isEmailValidated = true; // Set the email validated flag
                 }
             })
             .catch(err => {
@@ -41,6 +44,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 emailError.textContent = 'Failed to check email';
                 emailError.style.display = 'block';
             });
+        } else {
+            handlePasswordCheck();
         }
     }
 
@@ -49,15 +54,19 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/signin/password', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ email: emailInput.value, password: passwordInput.value, rememberMe: rememberMeCheckbox.checked })
+            body: JSON.stringify({
+                email: emailInput.value,
+                password: passwordInput.value,
+                rememberMe: rememberMeCheckbox.checked
+            })
         })
         .then(res => res.json())
         .then(data => {
             if (data.error) {
-                passwordError.textContent = data.message;  // 'Password is incorrect'
+                passwordError.textContent = data.message;
                 passwordError.style.display = 'block';
             } else {
-                window.location.href = '/index';  // Redirect on successful login
+                window.location.href = '/index'; // Redirect on successful login
             }
         })
         .catch(err => {
@@ -67,30 +76,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Event listener for click event on Next button
     nextButton.addEventListener('click', handleNextButtonClick);
 
-    // Event listener for keydown event (Enter key)
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
-            if (passwordContainer.style.display === 'none') {
-                handleNextButtonClick();
-            } else {
-                handlePasswordCheck();
-            }
+            handleNextButtonClick(); // Call the same function for Enter key press
         }
     });
 
-    // Event listener for click event on "Forgot password?" link
     var forgotPasswordLink = document.querySelector('.forgot');
     forgotPasswordLink.addEventListener('click', function(event) {
-        event.preventDefault();  // Prevent default behavior of link (i.e., navigating to the href)
-        window.location.href = '/forgotpassword';  // Navigate to the forgot password page
+        event.preventDefault(); // Prevent default behavior of link
+        window.location.href = '/forgotpassword'; // Navigate to the forgot password page
     });
 });
 
-// Function to toggle password visibility
 function togglePasswordVisibility() {
     var eye = document.getElementById('eye');
     var passwordInput = document.getElementById('password');
@@ -105,8 +106,6 @@ function togglePasswordVisibility() {
     }
 }
 
-// Function to navigate to signup page
 function goToSignup() {
     window.location.href = "/signup";
 }
-
