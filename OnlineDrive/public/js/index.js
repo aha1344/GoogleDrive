@@ -319,18 +319,15 @@ function uploadFile(file) {
 var currentModal = null;
 
 // Function to create and show the modal
-function modal1(content, onDelete) {
-    // Check if an existing modal is open, if yes then remove it
-    const existingModal = document.querySelector('.modal1');
-    if (existingModal) {
-        existingModal.remove();
+// Global function to create and display modals
+function modal1(content, onDelete, onDownload) {
+    // Close the current modal if it exists
+    if (currentModal) {
+        currentModal.remove();
     }
 
-    // Create modal element
     const modal = document.createElement('div');
     modal.className = 'modal1';
-    
-    // Add content to modal
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-buttons">
@@ -339,30 +336,90 @@ function modal1(content, onDelete) {
             </div>
         </div>
     `;
-    
-    // Append modal to body
     document.body.appendChild(modal);
-    
-    // Show modal
     modal.style.display = 'block';
 
-    // Position modal right under the clicked element
     const clickedElementRect = this.getBoundingClientRect();
-    const modalHeight = modal.clientHeight;
     modal.style.top = `${clickedElementRect.bottom}px`;
     modal.style.left = `${clickedElementRect.left}px`;
 
-    // Close modal when clicked outside of it
     modal.addEventListener('click', function(event) {
         if (event.target === modal) {
+            modal.remove();
+        } else if (event.target.classList.contains('delete')) {
+            onDelete();
+            modal.remove();
+        } else if (event.target.classList.contains('download')) {
+            onDownload();
             modal.remove();
         }
     });
 
-    // Add event listener to delete button
-    const deleteButton = modal.querySelector('.delete');
-    deleteButton.addEventListener('click', onDelete);
+    // Set the current modal to the newly created modal
+    currentModal = modal;
 }
+
+document.getElementById('fileListContainer').addEventListener('click', function(event) {
+    const fileElement = event.target.closest('.file-item');
+    if (fileElement) {
+        const fileId = fileElement.getAttribute('data-file-id');
+        modal1.call(fileElement, fileElement.textContent, () => {
+            deleteItem(fileId, 'file', () => fetchUserFiles());
+        }, () => {
+            downloadItem(fileId, 'file');
+        });
+    }
+});
+
+document.getElementById('folderListContainer').addEventListener('click', function(event) {
+    const folderElement = event.target.closest('.folder-item');
+    if (folderElement) {
+        const folderId = folderElement.getAttribute('data-folder-id');
+        modal1.call(folderElement, folderElement.textContent, () => {
+            deleteItem(folderId, 'folder', () => fetchUserFolders());
+        }, () => {
+            downloadItem(folderId, 'folder');
+        });
+    }
+});
+
+function downloadItem(itemId, itemType) {
+    // Prepare the data to send in the request
+    const data = JSON.stringify({ itemId: itemId, itemType: itemType });
+
+    fetch('/download', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: data
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        // Extract the filename from the Content-Disposition header
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const fileName = contentDisposition ? contentDisposition.split('filename=')[1] : (itemType === 'file' ? 'downloaded_file' : 'downloaded_folder.zip');
+        return response.blob().then(blob => ({ blob, fileName }));
+    })
+    .then(({ blob, fileName }) => {
+        // Create a URL for the blob object
+        const url = window.URL.createObjectURL(blob);
+        // Create a temporary anchor element and trigger the download with the original filename
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    })
+    .catch(error => {
+        console.error('Download failed:', error);
+        alert('Failed to download item');
+    });
+}
+
 
 // Function to delete an item (file or folder)
 function deleteItem(itemId, itemType, callback) {
@@ -432,14 +489,14 @@ function fetchUserFiles(query = '') {
 
                 
 
-                // Add click event listener to display modal with file information
                 fileElement.addEventListener('click', function() {
-                    modal1.call(fileElement, fileElement.textContent, () => {
-                        // Here you can add the delete functionality for the file
+                    modal1.call(this, this.textContent, () => {
                         deleteItem(file.id, 'file', () => {
                             console.log('File deleted:', file.file_name);
                             fetchUserFiles(); // Refresh file list after deletion
                         });
+                    }, () => {
+                        downloadItem(file.id, 'file');
                     });
                 });
 
@@ -494,12 +551,13 @@ function fetchUserFolders(query = '') {
 
                 // Add click event listener to display modal with folder information
                 folderElement.addEventListener('click', function() {
-                    modal1.call(folderElement, folderElement.textContent, () => {
-                        // Here you can add the delete functionality for the folder
+                    modal1.call(this, this.textContent, () => {
                         deleteItem(folder.id, 'folder', () => {
                             console.log('Folder deleted:', folder.folder_name);
                             fetchUserFolders(); // Refresh folder list after deletion
                         });
+                    }, () => {
+                        downloadItem(folder.id, 'folder');
                     });
                 });
 
