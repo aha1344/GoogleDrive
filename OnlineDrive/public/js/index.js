@@ -126,12 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupFileHandlers();
 });
 
-
-
-
-
-
-
 document.getElementById('create-folder-btn').addEventListener('click', function() {
     const folderName = prompt("Enter the name for the new folder:");
     if (!folderName) {
@@ -147,9 +141,14 @@ document.getElementById('create-folder-btn').addEventListener('click', function(
         },
         body: JSON.stringify(data)
     })
-    .then(response => response.text())
-    .then(text => {
-        alert(text); 
+    .then(response => response.json()) // Ensure that the server responds with JSON
+    .then(json => {
+        if (json.success) { // Check if the server indicates success
+            alert('Folder created successfully');
+            fetchUserFolders(); // Fetch folders again to update the list
+        } else {
+            alert('Failed to create folder: ' + json.message); // Show server error message
+        }
         toggleDropdown(document.getElementById('myDropdown'), true); // Close dropdown after action
     })
     .catch(err => {
@@ -157,6 +156,8 @@ document.getElementById('create-folder-btn').addEventListener('click', function(
         alert('Failed to create folder.');
     });
 });
+
+
 
 document.getElementById('file-upload-input').addEventListener('change', function(event) {
     const files = event.target.files;
@@ -320,7 +321,7 @@ var currentModal = null;
 
 // Function to create and show the modal
 // Global function to create and display modals
-function modal1(content, onDelete, onDownload) {
+function modal1(content, onDelete, onDownload, onRename) {
     // Close the current modal if it exists
     if (currentModal) {
         currentModal.remove();
@@ -333,6 +334,7 @@ function modal1(content, onDelete, onDownload) {
             <div class="modal-buttons">
                 <button class="delete">Delete</button>
                 <button class="download">Download</button>
+                <button class="rename">Rename</button>
             </div>
         </div>
     `;
@@ -352,6 +354,9 @@ function modal1(content, onDelete, onDownload) {
         } else if (event.target.classList.contains('download')) {
             onDownload();
             modal.remove();
+        } else if (event.target.classList.contains('rename')) {
+            onRename();
+            modal.remove();
         }
     });
 
@@ -364,9 +369,11 @@ document.getElementById('fileListContainer').addEventListener('click', function(
     if (fileElement) {
         const fileId = fileElement.getAttribute('data-file-id');
         modal1.call(fileElement, fileElement.textContent, () => {
-            deleteItem(fileId, 'file', () => fetchUserFiles());
+            deleteItem(file.id, 'file', () => fetchUserFiles());
         }, () => {
-            downloadItem(fileId, 'file');
+            downloadItem(file.id, 'file');
+        }, () => {
+            renameItem(file.id, 'file', fileElement, () => fetchUserFiles());
         });
     }
 });
@@ -376,12 +383,56 @@ document.getElementById('folderListContainer').addEventListener('click', functio
     if (folderElement) {
         const folderId = folderElement.getAttribute('data-folder-id');
         modal1.call(folderElement, folderElement.textContent, () => {
-            deleteItem(folderId, 'folder', () => fetchUserFolders());
+            deleteItem(folder.id, 'folder', () => fetchUserFolders());
         }, () => {
-            downloadItem(folderId, 'folder');
-        });
+            downloadItem(folder.id, 'folder');
+        }, () => {
+            renameItem(folder.id, 'folder', folderElement, () => fetchUserFolders());
+        });        
     }
 });
+function renameItem(itemId, itemType, itemElement, callback) {
+    const newName = prompt("Enter the new name:");
+    if (!newName) {
+        alert("The name cannot be empty!");
+        return;
+    }
+
+    fetch('/rename', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ itemId, itemType, newName })
+    })
+    .then(response => response.json())
+    .then(result => {
+        alert(result.message); // Assuming the response includes a message about the result
+        
+        // Update the UI element with the new name
+        if (itemType === 'file') {
+            const fileNameElement = itemElement.querySelector(`#file-name-${itemId}`);
+            fileNameElement.textContent = newName;
+        } else if (itemType === 'folder') {
+            const folderNameElement = itemElement.querySelector(`#folder-name-${itemId}`);
+            folderNameElement.textContent = newName;
+        }
+
+        // Optionally, fetch the updated data from the server
+        if (itemType === 'file') {
+            fetchUserFiles();
+        } else if (itemType === 'folder') {
+            fetchUserFolders();
+        }
+
+        if (typeof callback === 'function') {
+            callback(); // Call the callback function if provided
+        }
+    })
+    .catch(error => console.error('Error renaming item:', error));
+}
+
+
 
 function downloadItem(itemId, itemType) {
     // Prepare the data to send in the request
@@ -497,8 +548,13 @@ function fetchUserFiles(query = '') {
                         });
                     }, () => {
                         downloadItem(file.id, 'file');
+                    }, () => {
+                        renameItem(file.id, 'file', () => {
+                            fetchUserFiles(); // Refresh file list after renaming
+                        });
                     });
                 });
+                
 
                 fileListContainer.appendChild(fileElement);
             });
@@ -558,8 +614,14 @@ function fetchUserFolders(query = '') {
                         });
                     }, () => {
                         downloadItem(folder.id, 'folder');
+                    }, () => {
+                        renameItem(folder.id, 'folder', () => {
+                            console.log('Folder renamed:', folder.folder_name);
+                            fetchUserFolders(); // Refresh folder list after renaming
+                        });
                     });
                 });
+                
 
                 folderListContainer.appendChild(folderElement);
             });

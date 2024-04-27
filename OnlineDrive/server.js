@@ -147,8 +147,29 @@ app.post('/download', (req, res) => {
 });
 
 app.post('/rename', (req, res) => {
-    // Logic to rename the file
+    const { itemId, itemType, newName } = req.body;
+
+    let sql;
+    if (itemType === 'file') {
+        sql = 'UPDATE files SET file_name = ? WHERE id = ?';
+    } else if (itemType === 'folder') {
+        sql = 'UPDATE folders SET folder_name = ? WHERE id = ?';
+    } else {
+        return res.status(400).send('Invalid item type');
+    }
+
+    db.query(sql, [newName, itemId], (err, result) => {
+        if (err) {
+            console.error("Database error when renaming:", err);
+            return res.status(500).send('Database error: ' + err.message);
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Item not found');
+        }
+        res.send(`${itemType} renamed successfully to ${newName}!`);
+    });
 });
+
 
 app.post('/star', (req, res) => {
     // Logic to star the file
@@ -207,25 +228,31 @@ app.post('/create-folder', (req, res) => {
     const userId = req.session.userId;
 
     if (!userId) {
-        return res.status(401).send("Please log in to create folders.");
+        return res.status(401).json({ success: false, message: "Please log in to create folders." });
     }
 
-    const userDir = path.join(__dirname, 'ploads', String(userId)); // Base directory path for the user
+    const userDir = path.join(__dirname, 'uploads', String(userId));
     const folderPath = path.join(userDir, folderName);
 
-    fs.mkdir(folderPath, { recursive: true }, (err) => {
-        if (err) {
-            return res.status(500).send('Failed to create folder: ' + err.message);
+    fs.access(folderPath, fs.constants.F_OK, (err) => {
+        if (!err) {
+            return res.status(409).json({ success: false, message: "Folder already exists." });
         }
-        const sql = 'INSERT INTO folders (user_id, folder_name, folder_path, creation_date) VALUES (?, ?, ?, NOW())';
-        db.query(sql, [userId, folderName, folderPath], (error, results) => {
-            if (error) {
-                return res.status(500).send('Database error: ' + error.message);
+        fs.mkdir(folderPath, { recursive: true }, (err) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: 'Failed to create folder: ' + err.message });
             }
-            res.send('Folder created successfully!');
+            const sql = 'INSERT INTO folders (user_id, folder_name, folder_path, creation_date) VALUES (?, ?, ?, NOW())';
+            db.query(sql, [userId, folderName, folderPath], (error, results) => {
+                if (error) {
+                    return res.status(500).json({ success: false, message: 'Database error: ' + error.message });
+                }
+                res.json({ success: true, message: 'Folder created successfully!' });
+            });
         });
     });
 });
+
 
 // Sign-in with password route
 app.post('/signin/password', (req, res) => {
