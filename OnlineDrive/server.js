@@ -9,6 +9,7 @@ const multer = require('multer');
 const app = express();
 const PORT = 3000;
 
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -17,12 +18,12 @@ app.use(session({
     secret: 'your_secret_key',
     resave: false,
     saveUninitialized: true,
-  }));
+}));
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/')  // Ensure the uploads directory exists
+        cb(null, 'uploads/') // Ensure the uploads directory exists
     },
     filename: function (req, file, cb) {
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
@@ -49,7 +50,7 @@ app.use('/uploads', express.static('uploads'));
 
 // Route to redirect to signup page
 app.get('/', (req, res) => {
-    res.redirect('/signup');
+    res.redirect('/signin');
 });
 
 // Route to serve signup page
@@ -71,23 +72,23 @@ app.get('/forgotpassword', (req, res) => {
 });
 app.post('/share', (req, res) => {
     // Logic to share the file
-  });
-  
-  app.post('/download', (req, res) => {
+});
+
+app.post('/download', (req, res) => {
     // Logic to download the file
-  });
-  
-  app.post('/rename', (req, res) => {
+});
+
+app.post('/rename', (req, res) => {
     // Logic to rename the file
-  });
-  
-  app.post('/star', (req, res) => {
+});
+
+app.post('/star', (req, res) => {
     // Logic to star the file
-  });
-  
-  app.post('/move-to-trash', (req, res) => {
+});
+
+app.post('/move-to-trash', (req, res) => {
     // Logic to move the file to trash
-  });  
+});
 
 // User registration route
 app.post('/signup', (req, res) => {
@@ -131,44 +132,12 @@ app.post('/signin/email', (req, res) => {
         }
     });
 });
-
-// Route to get user folders
-app.get('/get-user-folders', function(req, res) {
-    const userId = req.session.userId;
-    if (!userId) {
-        return res.status(403).send('You must be logged in to view folders.');
-    }
-
-    const sql = 'SELECT * FROM folders WHERE user_id = ?';
-    db.query(sql, [userId], function(err, results) {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).send('Failed to fetch folders.');
-        }
-        res.json(results);
-    });
-});
-
-// Backend Endpoint to Get User Files
-app.get('/get-user-files', function (req, res) {
-    if (!req.session.userId) {
-        return res.status(401).send('Authentication required.'); // Or redirect to login page
-    }
-    const userId = req.session.userId;  // Retrieve user ID from session
-    db.query('SELECT * FROM files WHERE user_id = ?', [userId], function (err, results) {
-        if (err) {
-            return res.status(500).json({ message: 'Database error: ' + err.message });
-        }
-        res.json(results);
-    });
-});
-
 const fs = require('fs');
 // Route to create a new folder
 app.post('/create-folder', (req, res) => {
     const { folderName } = req.body;
     const userId = req.session.userId;
-    
+
     if (!userId) {
         return res.status(401).send("Please log in to create folders.");
     }
@@ -206,7 +175,7 @@ app.post('/signin/password', (req, res) => {
                     return res.status(500).json({ message: 'Bcrypt error', error: true });
                 }
                 if (isMatch) {
-                    req.session.userId = user.id;  // Set user ID in session
+                    req.session.userId = user.id; // Set user ID in session
                     res.json({ message: 'Logged in successfully', error: false });
                 } else {
                     res.json({ message: 'Password is incorrect', error: true });
@@ -220,7 +189,7 @@ app.post('/signin/password', (req, res) => {
 
 // File upload route
 app.post('/upload', upload.single('file'), function (req, res) {
-    const userId = req.session.userId;  // Ensure you're retrieving the user ID correctly, possibly from a session or JWT token
+    const userId = req.session.userId; // Ensure you're retrieving the user ID correctly, possibly from a session or JWT token
     const file = req.file;
     if (!file) {
         return res.status(400).send('Please upload a file.');
@@ -228,8 +197,8 @@ app.post('/upload', upload.single('file'), function (req, res) {
     const userDir = `uploads/${userId}`; // Ensuring files are stored under user-specific directories
     const filePath = `${userDir}/${file.originalname}`;
 
-    const insertSql = 'INSERT INTO files (user_id, file_name, file_path, upload_date) VALUES (?, ?, ?, NOW())';
-    db.query(insertSql, [userId, file.originalname, filePath], (err, result) => {
+    const insertSql = 'INSERT INTO files (user_id, file_name, file_path, upload_date, ReasonSuggested, Location) VALUES (?, ?, ?, NOW(), ?, ?)';
+    db.query(insertSql, [userId, file.originalname, filePath, 'Date of upload', file.path], (err, result) => {
         if (err) {
             return res.status(500).send('Database error: ' + err.message);
         }
@@ -237,16 +206,48 @@ app.post('/upload', upload.single('file'), function (req, res) {
     });
 });
 
+
 // Backend Endpoint to Get User Files
 app.get('/get-user-files', function (req, res) {
-    const userId = req.session.userId;  // Or get from a token in request headers
-    db.query('SELECT * FROM files WHERE user_id = ?', [userId], function (err, results) {
+    const userId = req.session.userId; // Ensure user is authenticated
+    const searchQuery = req.query.query || ''; // Retrieve the search query from the URL
+
+    // Modify the SQL query to include a LIKE clause for searching by file name
+    const sql = `
+        SELECT files.*, users.first_name AS owner, files.file_path AS location, files.upload_date AS reason_suggested
+        FROM files
+        INNER JOIN users ON files.user_id = users.id
+        WHERE files.user_id = ? AND files.file_name LIKE ?
+    `;
+
+    db.query(sql, [userId, `%${searchQuery}%`], function (err, results) {
         if (err) {
             return res.status(500).json({ message: 'Database error: ' + err.message });
         }
         res.json(results);
     });
 });
+
+app.get('/get-user-folders', function (req, res) {
+    const userId = req.session.userId; // Or get from a token in request headers
+    const searchQuery = req.query.query || ''; // Retrieve the search query from the URL
+
+    const sql = `
+        SELECT folders.*, users.first_name AS owner
+        FROM folders
+        INNER JOIN users ON folders.user_id = users.id
+        WHERE folders.user_id = ? AND folders.folder_name LIKE ?
+    `;
+
+    db.query(sql, [userId, `%${searchQuery}%`], function (err, results) {
+        if (err) {
+            return res.status(500).json({ message: 'Database error: ' + err.message });
+        }
+        res.json(results);
+    });
+});
+
+
 
 // Start the server
 app.listen(PORT, () => {

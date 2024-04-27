@@ -28,14 +28,19 @@
                 <div class="add-new">
                     <button class="add-new-button" id="dropdown-button" onclick="toggleDropdown(this)"><span id="plus-sign">&plus;</span>New</button>
                     <div class="dropdown-content" id="myDropdown">
-                        <button class="dp" onclick="createNewFolderPrompt()">
+                        <button id="myBtn" class="dp" onclick="createNewFolderPrompt()">
                             <img src="/Pics/new-folder.png" alt="" class="logo-img">New Folder
                         </button>
                         <button class="dp" onclick="document.getElementById('file-upload-input').click();">
                             <img src="/Pics/file-upload.png" alt="" class="logo-img">File Upload
                         </button>
                         <form id="create-folder-form" style="display: none;">
-                            <input type="text" id="folder-name-input" name="folderName">
+                            <div class="modal-content">
+                              <span class="close" id="close-modal">&times;</span>
+                              <p id="NewF">New folder</p>
+                              <input type="text" id="folder-name-input" name="folderName" placeholder="Enter folder name">
+                              <button type="button" id="create-folder-button">Create</button>
+                            </div>
                         </form>
                         <input type="file" id="file-upload-input" style="display: none;">
                     </div>
@@ -76,9 +81,11 @@
         <div class="body">
             <div class="search-container">
                 <button id="search-button"><img src="/Pics/search.png" alt="search" id="search-img"></button>
-                <input id="search-bar" type="search" placeholder="Search in Drive">
+                <input id="search-bar" type="search" placeholder="Search in Drive" onkeyup="handleSearch()">
                 <button id="setting-filter"><img src="/Pics/settings.png" alt="" id="setting-filter-img"></button>
             </div>
+        
+            
 
             <div id="main-box">
 
@@ -103,7 +110,7 @@
                             
                         </div>
                         <div class="layout-container">
-                            
+ 
                             <button class="layout-btn" id="list-btn1" onclick="handleButtonClick('list-btn1')">
                                 <img src="/Pics/tick.png" alt="Tick" class="tick">
                                 <img src="/Pics/list.png" alt="List Layout" class="logo-img-main2">
@@ -132,14 +139,15 @@
                         </div>
                         <div class="file-content">
                             <div class="name-content">
-                                <div id="fileListContainer"></div>
-                                <div id="folderListContainer"></div>
+                                <div id="fileListContainer" class="list-layout">
+                                    <!-- Files will be dynamically inserted here -->
+                                </div>
+                                <div id="folderListContainer" class="list-layout">
+                                    <!-- Folders will be dynamically inserted here -->
+                                </div>
                             </div>
-                            <div class="reason-content">
-                                
-                            </div>
-                            
                         </div>
+                        
                         
                     </div>
                 </div>
@@ -205,60 +213,36 @@
                         </div>
 
                         
+                        
                     </div>
                     <br>
 
-
-                    <div class="layer3">
-                        <div class="files-container">
-                            <div class="file-header">
-                                <div class="file-column" id="name">Name</div>
-                                <div class="file-column" id="owner">Owner</div>
-                                <div class="file-column" id="modify">Last Modified</div>
-                                <div class="file-column" id="size">File Size</div>
-                                <div class="more-btn">
-                                    <div class="file-column" id="dropdown-button" onclick="toggleDropdown(this)"><span id="more"><img src="/Pics/dots.png" alt="" id="more-img"></span></div>
-                                    <div class="dropdown-content" >
-                                        <div class="show-more">hello</div>
-                                        <button></button>
-                                        <button></button>  
-                                    </div> 
-                                </div>
-                            </div>
-                            <div id="file-list">
-                                <!-- Snippet to include in your existing .html where files/folders are listed -->
-                                <div class="file-item" onmouseover="showMenu(this)" onmouseout="hideMenu(this)">
-                                    <div class="file-info">
-                                    <!-- File information like name and icon goes here -->
-                                    </div>
-                                    <div class="file-actions" style="display: none;">
-                                    <!-- Action icons go here -->
-                                    <span onclick="share()">Share</span>
-                                    <span onclick="download()">Download</span>
-                                    <span onclick="rename()">Rename</span>
-                                    <span onclick="star()">Star</span>
-                                    <div class="kebab-menu">
-                                        <span onclick="toggleKebab(this)">⋮</span>
-                                        <div class="kebab-items" style="display: none;">
-                                        <!-- Kebab items go here -->
-                                        <span onclick="moveToTrash()">Move to Trash</span>
-                                        </div>
-                                    </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button id="create-file-btn">Create File</button>
-                            <div id="file-inputs" style="display: none;">
-                                <input type="text" id="file-name" placeholder="File Name">
-                                <input type="text" id="file-owner" placeholder="Owner">
-                                <input type="text" id="file-location" placeholder="Location">
-                                <button id="submit-file-btn">Submit</button>
+                    <div class="Layer3">
+                        <div class="file-header">
+                            <div class="file-column" id="name">Name</div>
+                            <div class="file-column" id="owner">Owner</div>
+                            <div class="file-column" id="modified">Last modified</div>
+                            <div class="file-column" id="filesize">File size</div>
+                            <div class="more-btn">
+                                <div class="file-column" id="dropdown-button" onclick="toggleDropdown(this)"><span id="more"><img src="/Pics/dots.png" alt="" id="more-img"></span></div>
+                                <div class="dropdown-content" >
+                                    <div class="show-more">Btn</div>
+                                    <button></button>
+                                    <button></button>  
+                                </div> 
                             </div>
                         </div>
+                        <div class="file-content">
+                            <div class="name-content">
+                                <div id="fileListContainer" class="list-layout">
+                                </div>
+                                <div id="folderListContainer" class="list-layout">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
                     </div>
-
-
-
                 </div>
                 
                 <div class="content hidden" id="computersContent">

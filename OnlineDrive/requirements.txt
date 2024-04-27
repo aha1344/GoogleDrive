@@ -1,0 +1,8 @@
+mysql
+bcryptjs
+body-parser
+path
+express-session
+nodemon
+express
+multer
