@@ -306,17 +306,40 @@ function fetchUserFolders() {
     });
 }
 
+function formatFileSize(sizeInKB) {
+    const sizeInGB = sizeInKB / 1048576;  // Convert KB to GB
+    return `<span style="font-size: 0.8em;">${sizeInGB.toFixed(5)} GB of 15 GB used</span> `;
+}
+function updateProgressBar(totalSizeInKB, maxSizeInKB) {
+    const percent = (totalSizeInKB / maxSizeInKB) * 100;
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = `${percent}%`;
+}
 function uploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
+
+    const fileSizeInKB = Math.round(file.size / 1024);
+    let totalFileSize = parseInt(sessionStorage.getItem('totalFileSize') || '0');
+    totalFileSize += fileSizeInKB;
+    sessionStorage.setItem('totalFileSize', totalFileSize.toString());
+
+    document.getElementById('fileSizeDisplay').innerHTML = formatFileSize(totalFileSize);
+    updateProgressBar(totalFileSize, 15000000);
+
     fetch('/upload', { method: 'POST', body: formData })
-    .then(response => response.text())
-    .then(result => {
-        alert('File uploaded successfully');
-        fetchUserFiles(); 
-    })
-    .catch(error => console.error('Error uploading file:', error));
+        .then(response => response.text())
+        .then(result => {
+            alert('File uploaded successfully');
+            fetchUserFiles();  // Refresh the file list after uploading
+        })
+        .catch(error => {
+            console.error('Error uploading file:', error);
+            alert('Error uploading file');
+        });
 }
+
+
 
 // Global variable to keep track of the current open modal
 var currentModal = null;
@@ -804,7 +827,7 @@ function createList(items, type) {
         const itemNameElement = document.createElement('div');
         const ownerElement = document.createElement('div');
         const dateCreatedElement = document.createElement('div');
-        // const itemDetailsElement = document.createElement('div');
+        const sizeElement = document.createElement('div');
 
         itemNameElement.textContent = type === 'file' ? item.file_name : item.folder_name;
         // itemDetailsElement.textContent = type === 'file' ? item.location : '';
@@ -812,16 +835,18 @@ function createList(items, type) {
         if (type === 'file') {
             ownerElement.textContent = item.owner;
             dateCreatedElement.textContent = new Date(item.upload_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            sizeElement.textContent = `Size: ${formatFileSize(item.file_size)}`; // Assuming file size is in bytes
         } else {
             ownerElement.textContent = item.owner;
             dateCreatedElement.textContent = new Date(item.creation_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            sizeElement.textContent = `Size: ${formatFileSize(item.total_size)}`;
         }
 
         itemElement.className = type === 'file' ? 'file-item' : 'folder-item';
         itemNameElement.className = 'item-name';
-        // itemDetailsElement.className = 'item-details';
         ownerElement.className = 'item-owner';
         dateCreatedElement.className = 'item-date-created';
+        sizeElement.className = 'item-size';
 
         itemElement.appendChild(itemNameElement);
         if (type === 'file') {
@@ -832,6 +857,7 @@ function createList(items, type) {
             itemElement.appendChild(ownerElement);
             itemElement.appendChild(dateCreatedElement);
         }
+        itemElement.appendChild(sizeElement);
 
         // Add modal functionality or any other interactive element here
         itemElement.addEventListener('click', function() {
@@ -852,5 +878,55 @@ function createList(items, type) {
 
         list.appendChild(itemElement);
     });
+    function formatFileSize(sizeInBytes) {
+        const sizeInKB = sizeInBytes / 1024;
+        const sizeInMB = sizeInKB / 1024;
+        if (sizeInMB < 1) return `${sizeInKB.toFixed(2)} KB`;
+        else if (sizeInMB >= 1000) return `${(sizeInMB / 1024).toFixed(2)} GB`;
+        return `${sizeInMB.toFixed(2)} MB`;
+    }
     return list;
+}
+
+// Function to open an element (e.g., a search block and background) for display
+function openElement() {
+    // Get the search block and background elements
+    const searchblock = document.getElementById('searchblock');
+    const background = document.getElementById('background');
+
+    // Set their display properties to 'block' for visibility
+    searchblock.style.display = 'block';
+    background.style.display = 'block';
+}
+
+// Function to close an element (e.g., a search block and background) to hide it
+function closeElement() {
+    // Get the search block and background elements
+    const searchblock = document.getElementById('searchblock');
+    const background = document.getElementById('background');
+
+    // Set their display properties to 'none' to hide them
+    searchblock.style.display = 'none';
+    background.style.display = 'none';
+}
+
+// Function to reset search inputs to default values
+function resetSearch() {
+    // Set default values for various search input elements
+    document.getElementById('type').value = 'any';
+    document.getElementById('owner').value = 'any';
+    document.getElementById('words').value = '';
+    document.getElementById('itemName').value = '';
+    document.getElementById('location').value = 'anywhere';
+    document.getElementById('inTrash').checked = false;
+    document.getElementById('starred').checked = false;
+    document.getElementById('encrypted').checked = false;
+    document.getElementById('dateModified').value = '';
+}
+
+// Function to perform a search operation
+function performSearch() {
+    // Alert the user that a search is being performed
+    alert('Performing search...');
+    // This function triggers the actual search functionality
 }

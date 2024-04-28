@@ -74,7 +74,6 @@ body {
     text-align: right;
 }
 
-/* also works for login on the signup page */
 .create-account{
 padding: 0 20px;
 color: #4285f4;
@@ -103,7 +102,7 @@ color: #4285f4;
     color: #000000;
     padding: 5px 10px;
     text-decoration: none;
-    font-size: 0.9rem; /* Adjusted font size for these links */
-    margin-left: 10px; /* Space between the links */
+    font-size: 0.9rem; 
+    margin-left: 10px;
     cursor: pointer;
 }

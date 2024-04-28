@@ -1,5 +1,9 @@
+// Event listener for when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Set the document title
     document.title = 'Sign up - Google Drive';
+
+    // Get references to various DOM elements
     var nextButton = document.getElementById('next-button');
     var firstNameError = document.getElementById('firstNameError');
     var lastNameError = document.getElementById('lastNameError');
@@ -15,14 +19,17 @@ document.addEventListener('DOMContentLoaded', function() {
     var eyeIcon = document.getElementById('eye');
     var currentStep = 0;
 
+    // Function to check if an email is valid
     function isValidEmail(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
+    // Function to check if a password is weak
     function isWeakPassword(password) {
         return password.length < 8;
     }
 
+    // Function to display an error message for an input element
     function displayError(inputElement, errorElement, message) {
         if (!inputElement.value.trim()) {
             errorElement.textContent = message;
@@ -32,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
 
+    // Function to toggle password visibility
     function togglePasswordVisibility() {
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
@@ -44,12 +52,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Function to validate inputs and proceed to the next step
     function validateAndProceed() {
         if (currentStep === 0) {
-            var valid = true; // Reset validity state
+            var valid = true; 
             valid &= displayError(firstNameInput, firstNameError, 'First name cannot be empty');
             valid &= displayError(lastNameInput, lastNameError, 'Last name cannot be empty');
-            if (!valid) return; // Stop progression if not valid
+            if (!valid) return; 
             nameContainer.style.display = 'none';
             emailContainer.style.display = 'block';
             currentStep++;
@@ -73,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Function to submit the form data
     function submitForm() {
         var formData = {
             firstName: firstNameInput.value.trim(),
@@ -81,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
             password: passwordInput.value.trim()
         };
 
+        // Send a POST request to submit the form data
         fetch('/signup', {
             method: 'POST',
             headers: {
@@ -92,27 +103,32 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) {
                 throw new Error('Failed to create account');
             }
-            // Redirect to signin.html if the POST was successful
-            goToSignin(); 
+            goToSignin(); // Redirect to the sign-in page on successful form submission
         })
         .catch(error => {
             console.error('Error:', error);
             alert('Failed to submit form.');
         });
     }
+
+    // Event listener for the next button click
     nextButton.addEventListener('click', validateAndProceed);
 
+    // Event listener for toggling password visibility
     eyeIcon.addEventListener('click', togglePasswordVisibility);
 
+    // Event listener for keydown events on input fields
     [firstNameInput, lastNameInput, emailInput, passwordInput].forEach(input => {
         input.addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
-                validateAndProceed();
+                validateAndProceed(); // Validate and proceed when Enter key is pressed
                 event.preventDefault();
             }
         });
     });
 });
+
+// Function to redirect to the sign-in page
 function goToSignin() {
     window.location.href = "/signin";
 }

@@ -61,8 +61,13 @@ app.get('/signup', (req, res) => {
 
 // Route to serve signin page
 app.get('/signin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'signin.html'));
+    if (req.session.userId) { // Check if user session exists
+        res.redirect('/index'); // Redirect to homepage
+    } else {
+        res.sendFile(path.join(__dirname, 'views', 'signin.html'));
+    }
 });
+
 
 // Route to serve index page
 app.get('/index', (req, res) => {
@@ -93,7 +98,6 @@ app.post('/download', (req, res) => {
             const filePath = results[0].file_path;
 
 
-            // Stream the file to the client for download
             res.download(filePath, (err) => {
                 if (err) {
                     return res.status(500).send('Error downloading file: ' + err.message);
@@ -138,7 +142,7 @@ app.post('/download', (req, res) => {
             });
 
             archive.pipe(output);
-            archive.directory(folderPath, false); // Compress folder contents without the folder itself
+            archive.directory(folderPath, false);
             archive.finalize();
         });
     } else {
@@ -172,14 +176,11 @@ app.post('/rename', (req, res) => {
 
 
 app.post('/star', (req, res) => {
-    // Logic to star the file
 });
 
 app.post('/move-to-trash', (req, res) => {
-    // Logic to move the file to trash
 });
 
-// User registration route
 app.post('/signup', (req, res) => {
     const { firstName, lastName, email, password } = req.body;
     const hashedPassword = bcrypt.hashSync(password, 10);
@@ -192,7 +193,7 @@ app.post('/signup', (req, res) => {
         res.send('User registered successfully!');
     });
 });
-// Route to handle password change
+
 app.post('/forgotpassword/change', (req, res) => {
     const { email, newPassword } = req.body;
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
@@ -256,7 +257,7 @@ app.post('/create-folder', (req, res) => {
 
 // Sign-in with password route
 app.post('/signin/password', (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const sql = `SELECT id, password FROM users WHERE email = ?`;
 
     db.query(sql, [email], (err, results) => {
@@ -271,6 +272,10 @@ app.post('/signin/password', (req, res) => {
                 }
                 if (isMatch) {
                     req.session.userId = user.id; // Set user ID in session
+                    if (rememberMe) {
+                        const oneWeek = 7 * 24 * 3600 * 1000; // one week
+                        req.session.cookie.maxAge = oneWeek; // Extend session cookie lifetime
+                    }
                     res.json({ message: 'Logged in successfully', error: false });
                 } else {
                     res.json({ message: 'Password is incorrect', error: true });
@@ -282,19 +287,61 @@ app.post('/signin/password', (req, res) => {
     });
 });
 
+app.get('/get-file-size', function (req, res) {
+    const fileId = req.query.fileId; // Assuming the file ID is passed as a query parameter
+
+    if (!fileId) {
+        return res.status(400).send('File ID is required');
+    }
+
+    const sql = 'SELECT file_size FROM files WHERE id = ?';
+    db.query(sql, [fileId], function (err, results) {
+        if (err) {
+            return res.status(500).send('Database error: ' + err.message);
+        }
+        if (results.length === 0) {
+            return res.status(404).send('File not found');
+        }
+        res.json({ fileSize: results[0].file_size });
+    });
+});
+app.get('/get-folder-size', function (req, res) {
+    const folderId = req.query.folderId; 
+
+    if (!folderId) {
+        return res.status(400).send('Folder ID is required');
+    }
+
+    const sql = `
+        SELECT SUM(file_size) AS total_size
+        FROM files
+        WHERE folder_id = ?
+    `;
+    db.query(sql, [folderId], function (err, results) {
+        if (err) {
+            return res.status(500).send('Database error: ' + err.message);
+        }
+        if (results.length === 0 || results[0].total_size === null) {
+            return res.status(404).send('Folder not found or empty');
+        }
+        res.json({ folderId: folderId, totalSize: results[0].total_size });
+    });
+});
+
 
 // File upload route
 app.post('/upload', upload.single('file'), function (req, res) {
-    const userId = req.session.userId; // Ensure you're retrieving the user ID correctly, possibly from a session or JWT token
+    const userId = req.session.userId; 
     const file = req.file;
     if (!file) {
         return res.status(400).send('Please upload a file.');
     }
-    const userDir = `uploads/`; // Corrected directory name
+    const userDir = `uploads/`; 
     const filePath = `${userDir}/${file.originalname}`;
+    const fileSize = file.size; // Get the size of the file from the Multer file object
 
-    const insertSql = 'INSERT INTO files (user_id, file_name, file_path, upload_date) VALUES (?, ?, ?, NOW())';
-    db.query(insertSql, [userId, file.originalname, filePath], (err, result) => {
+    const insertSql = 'INSERT INTO files (user_id, file_name, file_path, file_size, upload_date) VALUES (?, ?, ?, ?, NOW())';
+    db.query(insertSql, [userId, file.originalname, filePath, fileSize], (err, result) => {
         if (err) {
             return res.status(500).send('Database error: ' + err.message);
         }
@@ -303,12 +350,12 @@ app.post('/upload', upload.single('file'), function (req, res) {
 });
 
 
-// Backend Endpoint to Get User Files
-app.get('/get-user-files', function (req, res) {
-    const userId = req.session.userId; // Ensure user is authenticated
-    const searchQuery = req.query.query || ''; // Retrieve the search query from the URL
 
-    // Modify the SQL query to include a LIKE clause for searching by file name
+app.get('/get-user-files', function (req, res) {
+    const userId = req.session.userId; 
+    const searchQuery = req.query.query || ''; 
+
+    // Modify the SQL query
     const sql = `
         SELECT files.*, users.first_name AS owner, files.file_path AS location, files.upload_date AS reason_suggested
         FROM files
@@ -325,8 +372,8 @@ app.get('/get-user-files', function (req, res) {
 });
 
 app.get('/get-user-folders', function (req, res) {
-    const userId = req.session.userId; // Or get from a token in request headers
-    const searchQuery = req.query.query || ''; // Retrieve the search query from the URL
+    const userId = req.session.userId; 
+    const searchQuery = req.query.query || ''; 
 
     const sql = `
         SELECT folders.*, users.first_name AS owner
@@ -359,7 +406,6 @@ app.post('/delete-item', (req, res) => {
             res.send('File deleted successfully!');
         });
     } else if (itemType === 'folder') {
-        // Delete folder and its contents from the database and filesystem
         db.query('SELECT folder_path FROM folders WHERE id = ?', [itemId], (err, result) => {
             if (err) {
                 return res.status(500).send('Database error: ' + err.message);
@@ -370,13 +416,11 @@ app.post('/delete-item', (req, res) => {
 
             const folderPath = result[0].folder_path;
 
-            // Delete folder and its contents from the filesystem
             fs.rmdir(folderPath, { recursive: true }, (err) => {
                 if (err) {
                     return res.status(500).send('Error deleting folder and its contents from filesystem: ' + err.message);
                 }
 
-                // Once folder and its contents are deleted from filesystem, delete its record from the database
                 db.query('DELETE FROM folders WHERE id = ?', [itemId], (err, result) => {
                     if (err) {
                         return res.status(500).send('Database error: ' + err.message);
@@ -391,10 +435,6 @@ app.post('/delete-item', (req, res) => {
 });
 
 
-
-
-
-// Start the server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
