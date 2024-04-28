@@ -67,11 +67,12 @@
                         <button class="l1-button" id="storage"> <img src="/Pics/cloud.png" alt="Storage" class="logo-img">Storage</button>
 
                         
-                        <div class="loading-bar">
-                            <div class="progress" style="width: 50%;"></div>
-                        </div>
-                        
-                        <div class="c">0.0 GB of 15 GB used</div>
+                       
+ 
+                        <div id="progressContainer" style="width: 80%; background-color: #ddd;">
+                            <div id="progressBar" style="height: 10px; width: 0%; background-color: blue;"></div>
+                            </div>
+                            <div id="fileSizeDisplay">0 GB of 15 G</div>
                         <br>
                         <button id="more-storage">Get more storage</button>
                     </div>
@@ -241,6 +242,7 @@
                                 <div id="folderListContainer" class="list-layout">
                                 </div>
                             </div>
+                            
                         </div>
                         
                         

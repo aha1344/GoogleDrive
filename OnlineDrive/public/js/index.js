@@ -306,17 +306,40 @@ function fetchUserFolders() {
     });
 }
 
+function formatFileSize(sizeInKB) {
+    const sizeInGB = sizeInKB / 1048576;  // Convert KB to GB
+    return `<span style="font-size: 0.8em;">${sizeInGB.toFixed(5)} GB of 15 GB used</span> `;
+}
+function updateProgressBar(totalSizeInKB, maxSizeInKB) {
+    const percent = (totalSizeInKB / maxSizeInKB) * 100;
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = `${percent}%`;
+}
 function uploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
+
+    const fileSizeInKB = Math.round(file.size / 1024);
+    let totalFileSize = parseInt(sessionStorage.getItem('totalFileSize') || '0');
+    totalFileSize += fileSizeInKB;
+    sessionStorage.setItem('totalFileSize', totalFileSize.toString());
+
+    document.getElementById('fileSizeDisplay').innerHTML = formatFileSize(totalFileSize);
+    updateProgressBar(totalFileSize, 15000000);
+
     fetch('/upload', { method: 'POST', body: formData })
-    .then(response => response.text())
-    .then(result => {
-        alert('File uploaded successfully');
-        fetchUserFiles(); 
-    })
-    .catch(error => console.error('Error uploading file:', error));
+        .then(response => response.text())
+        .then(result => {
+            alert('File uploaded successfully');
+            fetchUserFiles();  // Refresh the file list after uploading
+        })
+        .catch(error => {
+            console.error('Error uploading file:', error);
+            alert('Error uploading file');
+        });
 }
+
+
 
 // Global variable to keep track of the current open modal
 var currentModal = null;
@@ -768,35 +791,46 @@ function createNewFolder(folderName) {
 function fetchMyDriveContent() {
     const contentContainer = document.getElementById('myDriveContent');
 
+    // Check if content already exists
+    const existingFilesList = contentContainer.querySelector('.files-list');
+    const existingFoldersList = contentContainer.querySelector('.folders-list');
+
+    if (existingFilesList && existingFoldersList) {
+        return; // Content already exists, exit function
+    }
+
     Promise.all([
         fetch('/get-user-files').then(res => res.json()),  // Fetch files
         fetch('/get-user-folders').then(res => res.json()) // Fetch folders
     ]).then(([files, folders]) => {
         // Create and append files list to the content container
-        contentContainer.innerHTML = ''; // Clear existing content
         const filesList = createList(files, 'file');
+        filesList.classList.add('files-list'); // Add a class to identify files list
         contentContainer.appendChild(filesList);
 
         // Create and append folders list to the content container
         const foldersList = createList(folders, 'folder');
+        foldersList.classList.add('folders-list'); // Add a class to identify folders list
         contentContainer.appendChild(foldersList);
     }).catch(err => {
         console.error('Failed to fetch files or folders:', err);
         alert('Failed to load My Drive content.');
     });
 }
+
+
 // This helper function creates HTML elements for files or folders and returns them as a list element.
 function createList(items, type) {
     const list = document.createElement('div');
     items.forEach(item => {
         const itemElement = document.createElement('div');
         const itemNameElement = document.createElement('div');
-        const itemDetailsElement = document.createElement('div');
         const ownerElement = document.createElement('div');
         const dateCreatedElement = document.createElement('div');
+        // const itemDetailsElement = document.createElement('div');
 
         itemNameElement.textContent = type === 'file' ? item.file_name : item.folder_name;
-        itemDetailsElement.textContent = type === 'file' ? item.location : '';
+        // itemDetailsElement.textContent = type === 'file' ? item.location : '';
 
         if (type === 'file') {
             ownerElement.textContent = item.owner;
@@ -808,13 +842,13 @@ function createList(items, type) {
 
         itemElement.className = type === 'file' ? 'file-item' : 'folder-item';
         itemNameElement.className = 'item-name';
-        itemDetailsElement.className = 'item-details';
+        // itemDetailsElement.className = 'item-details';
         ownerElement.className = 'item-owner';
         dateCreatedElement.className = 'item-date-created';
 
         itemElement.appendChild(itemNameElement);
         if (type === 'file') {
-            itemElement.appendChild(itemDetailsElement);
+            // itemElement.appendChild(itemDetailsElement);
             itemElement.appendChild(ownerElement);
             itemElement.appendChild(dateCreatedElement);
         } else {

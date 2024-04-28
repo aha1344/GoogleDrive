@@ -135,6 +135,7 @@
     z-index: 1;
     top: 100%;
     left: 0;
+    width: 300px
 }
 .dropdown-content button {
     color: black;
@@ -146,6 +147,7 @@
     width: 100%;
     text-align: left;
     cursor: pointer;
+    border-bottom: 1px solid #ccc;
 }
 .dropdown-content button:hover {
     background-color: #f1f1f1;
@@ -256,6 +258,7 @@
     justify-content: space-between;
 }
 .ff-btn {
+    background-color: transparent;
     width: fit-content;
     padding: 5px 10px;
     border: 1px solid #ccc;
@@ -267,7 +270,7 @@
 }
 .ff-btn:first-child {
     border-radius: 20px 0 0 20px;
-    border-right: 2px solid #ccc;
+    border-right: transparent;
     margin-right: -5px;
 }
 .ff-btn:last-child {
@@ -647,4 +650,39 @@ div[id^="folder-location-"], div[id^="file-location-"]{
 
 div[id^="folder-owner-"], div[id^="file-owner-"]{
     padding-right: 80px;
+}
+
+
+
+
+/* CSS for item name */
+.item-name {
+    display: flex;
+    justify-content: left;
+    padding-right: 270px;
+    width: 15%;
+}
+
+.item-details {
+    font-size: 14px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.item-owner {
+    padding-right: 80px;
+}
+
+.item-date-created {
+    padding-right: 70px;
+}
+
+.file-item {
+    border-bottom: 1px solid #ccc;
+    padding: 10px;
+}
+
+.folder-item {
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
 }
