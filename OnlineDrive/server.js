@@ -61,8 +61,13 @@ app.get('/signup', (req, res) => {
 
 // Route to serve signin page
 app.get('/signin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'signin.html'));
+    if (req.session.userId) { // Check if user session exists
+        res.redirect('/index'); // Redirect to homepage
+    } else {
+        res.sendFile(path.join(__dirname, 'views', 'signin.html'));
+    }
 });
+
 
 // Route to serve index page
 app.get('/index', (req, res) => {
@@ -256,7 +261,7 @@ app.post('/create-folder', (req, res) => {
 
 // Sign-in with password route
 app.post('/signin/password', (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const sql = `SELECT id, password FROM users WHERE email = ?`;
 
     db.query(sql, [email], (err, results) => {
@@ -271,6 +276,10 @@ app.post('/signin/password', (req, res) => {
                 }
                 if (isMatch) {
                     req.session.userId = user.id; // Set user ID in session
+                    if (rememberMe) {
+                        const oneWeek = 7 * 24 * 3600 * 1000; // one week
+                        req.session.cookie.maxAge = oneWeek; // Extend session cookie lifetime
+                    }
                     res.json({ message: 'Logged in successfully', error: false });
                 } else {
                     res.json({ message: 'Password is incorrect', error: true });
@@ -279,6 +288,47 @@ app.post('/signin/password', (req, res) => {
         } else {
             res.json({ message: 'Email not found', error: true });
         }
+    });
+});
+
+app.get('/get-file-size', function (req, res) {
+    const fileId = req.query.fileId; // Assuming the file ID is passed as a query parameter
+
+    if (!fileId) {
+        return res.status(400).send('File ID is required');
+    }
+
+    const sql = 'SELECT file_size FROM files WHERE id = ?';
+    db.query(sql, [fileId], function (err, results) {
+        if (err) {
+            return res.status(500).send('Database error: ' + err.message);
+        }
+        if (results.length === 0) {
+            return res.status(404).send('File not found');
+        }
+        res.json({ fileSize: results[0].file_size });
+    });
+});
+app.get('/get-folder-size', function (req, res) {
+    const folderId = req.query.folderId; // Assuming the folder ID is passed as a query parameter
+
+    if (!folderId) {
+        return res.status(400).send('Folder ID is required');
+    }
+
+    const sql = `
+        SELECT SUM(file_size) AS total_size
+        FROM files
+        WHERE folder_id = ?
+    `;
+    db.query(sql, [folderId], function (err, results) {
+        if (err) {
+            return res.status(500).send('Database error: ' + err.message);
+        }
+        if (results.length === 0 || results[0].total_size === null) {
+            return res.status(404).send('Folder not found or empty');
+        }
+        res.json({ folderId: folderId, totalSize: results[0].total_size });
     });
 });
 
@@ -292,15 +342,17 @@ app.post('/upload', upload.single('file'), function (req, res) {
     }
     const userDir = `uploads/`; // Corrected directory name
     const filePath = `${userDir}/${file.originalname}`;
+    const fileSize = file.size; // Get the size of the file from the Multer file object
 
-    const insertSql = 'INSERT INTO files (user_id, file_name, file_path, upload_date) VALUES (?, ?, ?, NOW())';
-    db.query(insertSql, [userId, file.originalname, filePath], (err, result) => {
+    const insertSql = 'INSERT INTO files (user_id, file_name, file_path, file_size, upload_date) VALUES (?, ?, ?, ?, NOW())';
+    db.query(insertSql, [userId, file.originalname, filePath, fileSize], (err, result) => {
         if (err) {
             return res.status(500).send('Database error: ' + err.message);
         }
         res.send('File uploaded successfully!');
     });
 });
+
 
 
 // Backend Endpoint to Get User Files

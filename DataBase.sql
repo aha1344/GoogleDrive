@@ -14,21 +14,21 @@ CREATE TABLE users (
 -- Files Table
 CREATE TABLE files (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    file_name VARCHAR(255),
-    file_path VARCHAR(255),
+    user_id INT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_size BIGINT,  -- File size in bytes
     upload_date DATETIME,
-    status ENUM('active', 'trashed') DEFAULT 'active', -- Add a status column with ENUM type
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
 
 -- Folders Table
 CREATE TABLE folders (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    folder_name VARCHAR(255),
-    folder_path VARCHAR(255),
+    user_id INT NOT NULL,
+    folder_name VARCHAR(255) NOT NULL,
+    folder_path VARCHAR(255) NOT NULL,
     creation_date DATETIME,
-    status ENUM('active', 'trashed') DEFAULT 'active', -- Add a status column with ENUM type
     FOREIGN KEY (user_id) REFERENCES users(id)
 );

@@ -827,7 +827,7 @@ function createList(items, type) {
         const itemNameElement = document.createElement('div');
         const ownerElement = document.createElement('div');
         const dateCreatedElement = document.createElement('div');
-        // const itemDetailsElement = document.createElement('div');
+        const sizeElement = document.createElement('div');
 
         itemNameElement.textContent = type === 'file' ? item.file_name : item.folder_name;
         // itemDetailsElement.textContent = type === 'file' ? item.location : '';
@@ -835,16 +835,18 @@ function createList(items, type) {
         if (type === 'file') {
             ownerElement.textContent = item.owner;
             dateCreatedElement.textContent = new Date(item.upload_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            sizeElement.textContent = `Size: ${formatFileSize(item.file_size)}`; // Assuming file size is in bytes
         } else {
             ownerElement.textContent = item.owner;
             dateCreatedElement.textContent = new Date(item.creation_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            sizeElement.textContent = `Size: ${formatFileSize(item.total_size)}`;
         }
 
         itemElement.className = type === 'file' ? 'file-item' : 'folder-item';
         itemNameElement.className = 'item-name';
-        // itemDetailsElement.className = 'item-details';
         ownerElement.className = 'item-owner';
         dateCreatedElement.className = 'item-date-created';
+        sizeElement.className = 'item-size';
 
         itemElement.appendChild(itemNameElement);
         if (type === 'file') {
@@ -855,6 +857,7 @@ function createList(items, type) {
             itemElement.appendChild(ownerElement);
             itemElement.appendChild(dateCreatedElement);
         }
+        itemElement.appendChild(sizeElement);
 
         // Add modal functionality or any other interactive element here
         itemElement.addEventListener('click', function() {
@@ -875,5 +878,12 @@ function createList(items, type) {
 
         list.appendChild(itemElement);
     });
+    function formatFileSize(sizeInBytes) {
+        const sizeInKB = sizeInBytes / 1024;
+        const sizeInMB = sizeInKB / 1024;
+        if (sizeInMB < 1) return `${sizeInKB.toFixed(2)} KB`;
+        else if (sizeInMB >= 1000) return `${(sizeInMB / 1024).toFixed(2)} GB`;
+        return `${sizeInMB.toFixed(2)} MB`;
+    }
     return list;
 }

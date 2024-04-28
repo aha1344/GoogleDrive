@@ -46,10 +46,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to handle password check
     function handlePasswordCheck() {
+        const rememberMe = document.querySelector('#rememberMe').checked;
         fetch('/signin/password', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ email: emailInput.value, password: passwordInput.value })
+            body: JSON.stringify({ email: emailInput.value, password: passwordInput.value, rememberMe: rememberMe })
         })
         .then(res => res.json())
         .then(data => {
@@ -66,6 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
             passwordError.style.display = 'block';
         });
     }
+    
 
     // Event listener for click event on Next button
     nextButton.addEventListener('click', handleNextButtonClick);
