@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     homeBtn.addEventListener('click', () => {
         showContent(homeContent);
         fetchUserFiles(); 
-        document.title = 'Home - Google Drive'; 
+        document.title = 'Home - Google Drive';
     });
 
     myDriveBtn.addEventListener('click', () => {
@@ -124,13 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupButtonHandlers();
     setupFileHandlers();
+    showFolders();
 });
-
-
-
-
-
-
 
 document.getElementById('create-folder-btn').addEventListener('click', function() {
     const folderName = prompt("Enter the name for the new folder:");
@@ -147,9 +142,14 @@ document.getElementById('create-folder-btn').addEventListener('click', function(
         },
         body: JSON.stringify(data)
     })
-    .then(response => response.text())
-    .then(text => {
-        alert(text); 
+    .then(response => response.json()) // Ensure that the server responds with JSON
+    .then(json => {
+        if (json.success) { // Check if the server indicates success
+            alert('Folder created successfully');
+            fetchUserFolders(); // Fetch folders again to update the list
+        } else {
+            alert('Failed to create folder: ' + json.message); // Show server error message
+        }
         toggleDropdown(document.getElementById('myDropdown'), true); // Close dropdown after action
     })
     .catch(err => {
@@ -176,6 +176,9 @@ document.getElementById('file-upload-input').addEventListener('change', function
         alert('File uploaded successfully');
         console.log(text);
         toggleDropdown(document.getElementById('myDropdown'), true); // Close dropdown after action
+
+        // Reload the page to display the new file
+        location.reload();
     })
     .catch(err => {
         console.error('Error uploading file:', err);
@@ -315,52 +318,209 @@ function uploadFile(file) {
     .catch(error => console.error('Error uploading file:', error));
 }
 
+// Global variable to keep track of the current open modal
+var currentModal = null;
+
 // Function to create and show the modal
-function modal1(content, onDelete) {
-    // Check if an existing modal is open, if yes then remove it
-    const existingModal = document.querySelector('.modal1');
-    if (existingModal) {
-        existingModal.remove();
+function modal1(content, onDelete, onDownload, onRename) {
+    // Close the current modal if it exists
+    if (currentModal) {
+        // currentModal.remove();
+        currentModal = null;
     }
 
-    // Create modal element
     const modal = document.createElement('div');
     modal.className = 'modal1';
-    
-    // Add content to modal
     modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-buttons">
-                <button class="delete">Delete</button>
-                <button class="download">Download</button>
-            </div>
-        </div>
+    <div class="modal-content">
+    <div class="close-container">
+        <button class="star"><img src="/Pics/star.png" alt="Star" class="logo-img-main" id="starIcon"></button>
+        <button class="close-btn">
+            <span id="close-btn">&times;</span>
+        </button>
+    </div>
+    <div class="modal-buttons">
+        <button class="delete"><img src="/Pics/trash.png" alt="Delete" class="logo-img-main"> Delete</button>
+        <button class="download"><img src="/Pics/download.png" alt="Download" class="logo-img-main"> Download</button>
+        <button class="rename"><img src="/Pics/rename.png" alt="Rename" class="logo-img-main"> Rename</button>
+    </div>
+</div>
     `;
-    
-    // Append modal to body
     document.body.appendChild(modal);
-    
-    // Show modal
     modal.style.display = 'block';
 
-    // Position modal right under the clicked element
     const clickedElementRect = this.getBoundingClientRect();
-    const modalHeight = modal.clientHeight;
     modal.style.top = `${clickedElementRect.bottom}px`;
     modal.style.left = `${clickedElementRect.left}px`;
 
-    // Close modal when clicked outside of it
-    modal.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            modal.remove();
-        }
+    modal.querySelector('.close-btn').addEventListener('click', function() {
+        modal.remove();
+        currentModal = null;
     });
 
-    // Add event listener to delete button
-    const deleteButton = modal.querySelector('.delete');
-    deleteButton.addEventListener('click', onDelete);
+    modal.addEventListener('click', function(event) {
+        event.stopPropagation();
+        if (event.target.classList.contains('delete')) {
+            onDelete();
+        } else if (event.target.classList.contains('download')) {
+            onDownload();
+        } else if (event.target.classList.contains('rename')) {
+            onRename();
+        }
+        // modal.remove();
+        currentModal = null;
+    });
+
+    currentModal = modal;
+
+    const starIcon = document.querySelector('starIcon');
+        starIcon.addEventListener('click', function() {
+        starIcon.classList.toggle('filled');
+    });
 }
 
+
+
+
+document.addEventListener('click', function(event) {
+    if (currentModal && !currentModal.contains(event.target)) {
+        // currentModal.remove();
+        currentModal = null;
+    }
+});
+
+document.getElementById('fileListContainer').addEventListener('click', function(event) {
+    const fileElement = event.target.closest('.file-item');
+    if (fileElement) {
+        const fileId = fileElement.getAttribute('data-file-id');
+        modal1.call(fileElement, fileElement.textContent, () => {
+            deleteItem(file.id, 'file', () => fetchUserFiles());
+        }, () => {
+            downloadItem(file.id, 'file');
+        }, () => {
+            renameItem(file.id, 'file', fileElement, () => fetchUserFiles());
+        });
+    }
+});
+
+document.getElementById('folderListContainer').addEventListener('click', function(event) {
+    const folderElement = event.target.closest('.folder-item');
+    if (folderElement) {
+        const folderId = folderElement.getAttribute('data-folder-id');
+        modal1.call(folderElement, folderElement.textContent, () => {
+            deleteItem(folder.id, 'folder', () => fetchUserFolders());
+        }, () => {
+            downloadItem(folder.id, 'folder');
+        }, () => {
+            renameItem(folder.id, 'folder', folderElement, () => fetchUserFolders());
+        });        
+    }
+});
+
+function renameItem(itemId, itemType, itemElement, callback) {
+    const newName = prompt("Enter the new name:");
+    if (!newName) {
+        alert("The name cannot be empty!");
+        return;
+    }
+
+    fetch('/rename', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ itemId, itemType, newName })
+    })
+    .then(response => response.json())
+    .then(result => {
+        alert(result.message); // Assuming the response includes a message about the result
+        
+        // Update the UI element with the new name
+        if (itemType === 'file') {
+            const fileNameElement = itemElement.querySelector(`#file-name-${itemId}`);
+            fileNameElement.textContent = newName;
+        } else if (itemType === 'folder') {
+            const folderNameElement = itemElement.querySelector(`#folder-name-${itemId}`);
+            folderNameElement.textContent = newName;
+        }
+
+        // Optionally, fetch the updated data from the server
+        if (itemType === 'file') {
+            fetchUserFiles();
+        } else if (itemType === 'folder') {
+            fetchUserFolders();
+        }
+
+        if (typeof callback === 'function') {
+            callback(); // Call the callback function if provided
+        }
+    })
+    .catch(error => console.error('Error renaming item:', error));
+}
+
+function downloadItem(itemId, itemType) {
+    // Prepare the data to send in the request
+    const data = JSON.stringify({ itemId: itemId, itemType: itemType });
+
+    fetch('/download', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: data
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        // Extract the filename from the Content-Disposition header
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const fileName = contentDisposition ? contentDisposition.split('filename=')[1] : (itemType === 'file' ? 'downloaded_file' : 'downloaded_folder.zip');
+        return response.blob().then(blob => ({ blob, fileName }));
+    })
+    .then(({ blob, fileName }) => {
+        // Create a URL for the blob object
+        const url = window.URL.createObjectURL(blob);
+        // Create a temporary anchor element and trigger the download with the original filename
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    })
+    .catch(error => {
+        console.error('Download failed:', error);
+        alert('Failed to download item');
+    });
+}
+
+// Function to delete an item (file or folder)
+function deleteItem(itemId, itemType, callback) {
+    fetch('/delete-item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ itemId, itemType })
+    })
+    .then(response => response.text())
+    .then(text => {
+        alert(text);
+        if (itemType === 'file') {
+            fetchUserFiles();
+        } else if (itemType === 'folder') {
+            fetchUserFolders();
+        }
+        if (typeof callback === 'function') {
+            callback(); // Call the callback function after deletion
+        }
+    })
+    .catch(err => {
+        console.error('Error deleting item:', err);
+        alert('Error deleting item');
+    });
+}
 
 // Function to fetch user files and display them
 function fetchUserFiles(query = '') {
@@ -401,25 +561,27 @@ function fetchUserFiles(query = '') {
                 locationElement.textContent = file.location;
                 fileElement.appendChild(locationElement);
 
-                
-
-                // Add click event listener to display modal with file information
                 fileElement.addEventListener('click', function() {
-                    modal1.call(fileElement, fileElement.textContent, () => {
-                        // Here you can add the delete functionality for the file
-                        // For example:
-                        // deleteFile(file.id);
-                        console.log('File deleted:', file.file_name);
-                        modal-search.remove(); // Remove the modal after deletion
+                    modal1.call(this, this.textContent, () => {
+                        deleteItem(file.id, 'file', () => {
+                            console.log('File deleted:', file.file_name);
+                            fetchUserFiles(); // Refresh file list after deletion
+                        });
+                    }, () => {
+                        downloadItem(file.id, 'file');
+                    }, () => {
+                        renameItem(file.id, 'file', () => {
+                            fetchUserFiles(); // Refresh file list after renaming
+                        });
                     });
                 });
+                
 
                 fileListContainer.appendChild(fileElement);
             });
         })
         .catch(err => console.error('Error fetching files:', err));
 }
-
 
 // Function to fetch user folders and display them
 function fetchUserFolders(query = '') {
@@ -465,14 +627,21 @@ function fetchUserFolders(query = '') {
 
                 // Add click event listener to display modal with folder information
                 folderElement.addEventListener('click', function() {
-                    modal1.call(folderElement, folderElement.textContent, () => {
-                        // Here you can add the delete functionality for the folder
-                        // For example:
-                        // deleteFolder(folder.id);
-                        console.log('Folder deleted:', folder.folder_name);
-                        modal-search.remove(); // Remove the modal after deletion
+                    modal1.call(this, this.textContent, () => {
+                        deleteItem(folder.id, 'folder', () => {
+                            console.log('Folder deleted:', folder.folder_name);
+                            fetchUserFolders(); // Refresh folder list after deletion
+                        });
+                    }, () => {
+                        downloadItem(folder.id, 'folder');
+                    }, () => {
+                        renameItem(folder.id, 'folder', () => {
+                            console.log('Folder renamed:', folder.folder_name);
+                            fetchUserFolders(); // Refresh folder list after renaming
+                        });
                     });
                 });
+                
 
                 folderListContainer.appendChild(folderElement);
             });
@@ -513,13 +682,18 @@ function handleButtonClick(buttonId) {
     gridButton.classList.add('active');
     listButton.classList.remove('active');
   }
+  const buttons = document.querySelectorAll('.ff-btn');
+
+    buttons.forEach(button => {
+        if (button.id === buttonId) {
+            button.classList.toggle('active');
+        } else {
+            button.classList.remove('active');
+        }
+    });
 }
 
 document.getElementById('search-bar').addEventListener('keyup', handleSearch);
-
-
-
-
 
 
 
@@ -559,6 +733,8 @@ function createNewFolderPrompt() {
         
         // Clear the input for next time
         folderNameInput.value = '';
+        // Reload the page to display the new file
+        location.reload();
     }
     
     // Function to handle closing modal when close button is clicked

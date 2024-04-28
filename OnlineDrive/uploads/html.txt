@@ -1,0 +1,223 @@
+<html>
+<head>
+<title>This is the Title</title>
+</head>
+<body>
+<h1>My name is Mohammed Osman</h1>
+<p> this is the first one </p>
+</body>
+</html>
+
+java test keep here
+
+import java.util.*;
+
+public class gigi {
+    public static void main(String[] args) {
+        Scanner console = new Scanner(System.in);
+        int small = 0;
+        int large = 0;
+        System.out.print("Num 1: ");
+        int n1 = console.nextInt();
+        small = n1;
+        large = n1;
+
+        for (int i = 2; i <= 10; i++) {
+            System.out.print("Num " + i + ": ");
+            int n2 = console.nextInt();
+
+            if (n2 < small) {
+                small = n2;
+            }
+            if (n2 > large) {
+                large = n2;
+            }
+        }
+            System.out.println("Largest: " + large + "    Smallest: " + small);
+        }
+    }
+
+
+/*
+import java.util.*;
+public class bob {
+    public static int longestSortedSequence(int[] array){
+        int high =0, count=1;
+     for(int i = 0; i< array.length; i++){
+         if(array[i]<=array[i+1]){
+             count++;
+         }
+         if(count>high){
+             high=count;
+         }
+     }
+    }
+    public static void main(String[] args) {
+        int[] array = new int[5];
+        for(int i = 0; i< array.length; i++){
+            System.out.println(array[i]);
+        }
+        longestSortedSequence();
+    }
+}*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Computing statistics of a set of numbers gives a helpful summarization for some property of a set of data. Common statistics include the mean (also known as the average) and the standard deviation (which tells how spread out the data are from the mean).
+Write a class named StatCalc that computes the statistical properties of a dataset (list of numbers). You have to define the following methods:
+1. void enter (double item) where item is a number, adds the item to the dataset.
+2. int getCount() a function that returns the number of items that have been added to the
+dataset.
+
+3. double getSum() a function that returns the sum of all the items that have been added
+to the dataset.
+4. getMax◊ a function that returns the largest number in the dataset
+5. getMin() a function that returns the smallest number in the dataset
+6. double getMean◊ a function that returns the average of all the items.
+7. double getStandard Deviation) a function that returns the standard deviation of the
+items.
+
+solution chatgpt
+import java.util.ArrayList;
+
+public class StatCalc {
+    private ArrayList<Double> data;
+    private int count;
+    private double sum;
+    private double max;
+    private double min;
+
+    public StatCalc() {
+        data = new ArrayList<Double>();
+        count = 0;
+        sum = 0;
+        max = Double.MIN_VALUE;
+        min = Double.MAX_VALUE;
+    }
+
+    public void enter(double item) {
+        data.add(item);
+        count++;
+        sum += item;
+        if (item > max) {
+            max = item;
+        }
+        if (item < min) {
+            min = item;
+        }
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public double getSum() {
+        return sum;
+    }
+
+    public double getMax() {
+        return max;
+    }
+
+    public double getMin() {
+        return min;
+    }
+
+    public double getMean() {
+        return sum / count;
+    }
+
+    public double getStandardDeviation() {
+        double mean = getMean();
+        double deviationSum = 0;
+        for (double item : data) {
+            deviationSum += Math.pow(item - mean, 2);
+        }
+        return Math.sqrt(deviationSum / count);
+    }
+}
+
+
+
+
+
+
+
+
+import java.util.*;
+public class Multiples{
+    public static void main(String[] args){
+        Scanner console = new Scanner(System.in);
+        System.out.println("Enter a sequence of integers below:\nWarning: Negative integer discarded! Enter positive integers: ");
+        int num = console.nextInt();
+        int mult=0;
+
+        if(num>0){
+            for(int i = 1; i<10; i++){
+                mult = num*i;
+            }
+            System.out.println("Entered integer multiples of 5 are: " + mult);
+        }
+        else if(num<0){
+            System.out.println("Warning: Negative integer discarded! Enter positive integers:");
+            num = console.nextInt();
+        }
+        else if(num==0){
+            System.out.println("No integer multiples of 5 exist.");
+        }
+    }
+}
+
+public void stutter() {
+        ListNode current = head;
+        while (current != null) {
+            int value = current.data;
+            ListNode newNode = new ListNode(value);
+            newNode.next = current.next;
+            current.next = newNode;
+            current = newNode.next;
+        }
+    }
+
+public static ListNode removeEvens(ListNode head) {
+        // Handle the case where the list is empty or has no odd numbers
+        if (head == null) {
+            return null;
+        }
+        
+        // Remove even numbers from the beginning of the list
+        while (head != null && head.value % 2 == 0) {
+            head = head.next;
+        }
+
+        // Traverse the list, removing even numbers
+        ListNode current = head;
+        while (current != null && current.next != null) {
+            if (current.next.value % 2 == 0) {
+                current.next = current.next.next; // Skip even number nodes
+            } else {
+                current = current.next;
+            }
+        }
+
+        return head; // Return the updated head of the list
+    }

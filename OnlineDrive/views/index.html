@@ -36,15 +36,17 @@
                         </button>
                         <form id="create-folder-form" style="display: none;">
                             <div class="modal-content">
-                              <span class="close" id="close-modal">&times;</span>
                               <p id="NewF">New folder</p>
                               <input type="text" id="folder-name-input" name="folderName" placeholder="Enter folder name">
-                              <button type="button" id="create-folder-button">Create</button>
+                              <div class="cancel-create-container">
+                                <span class="close" id="close-modal">Cancel</span>
+                                <span type="button" id="create-folder-button">Create</span>
+                              </div>
                             </div>
                         </form>
                         <input type="file" id="file-upload-input" style="display: none;">
                     </div>
-                </div>
+                </div>  
             <div class="list">
                 <ul id="features">
                     <div class="l1">

@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    document.title = 'Sign up - Google Drive';
     var nextButton = document.getElementById('next-button');
     var firstNameError = document.getElementById('firstNameError');
     var lastNameError = document.getElementById('lastNameError');

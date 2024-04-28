@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const path = require('path');
 const multer = require('multer');
+const archiver = require('archiver');
 
 const app = express();
 const PORT = 3000;
@@ -19,18 +20,18 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
 }));
-
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/') // Ensure the uploads directory exists
     },
     filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
+        cb(null, file.originalname) // Save the original filename
     }
 });
 
 const upload = multer({ storage: storage });
+
 
 // MySQL connection setup
 const db = mysql.createConnection({
@@ -74,13 +75,101 @@ app.post('/share', (req, res) => {
     // Logic to share the file
 });
 
+// Route to handle file download
 app.post('/download', (req, res) => {
-    // Logic to download the file
+    const { itemId, itemType } = req.body;
+
+    if (itemType === 'file') {
+        // Retrieve file path from the database based on file ID
+        const sql = 'SELECT file_path FROM files WHERE id = ?';
+        db.query(sql, [itemId], (err, results) => {
+            if (err) {
+                return res.status(500).send('Database error: ' + err.message);
+            }
+            if (results.length === 0) {
+                return res.status(404).send('File not found in the database');
+            }
+
+            const filePath = results[0].file_path;
+
+
+            // Stream the file to the client for download
+            res.download(filePath, (err) => {
+                if (err) {
+                    return res.status(500).send('Error downloading file: ' + err.message);
+                }
+            });
+        });
+    } else if (itemType === 'folder') {
+        // Retrieve folder path from the database based on folder ID
+        const sql = 'SELECT folder_path FROM folders WHERE id = ?';
+        db.query(sql, [itemId], (err, results) => {
+            if (err) {
+                return res.status(500).send('Database error: ' + err.message);
+            }
+            if (results.length === 0) {
+                return res.status(404).send('Folder not found in the database');
+            }
+
+            const folderPath = results[0].folder_path;
+
+            // Compress the folder into a ZIP file
+            const zipFilePath = `${folderPath}.zip`;
+            const output = fs.createWriteStream(zipFilePath);
+            const archive = archiver('zip');
+
+            output.on('close', () => {
+                // Stream the ZIP file to the client for download
+                res.download(zipFilePath, (err) => {
+                    if (err) {
+                        return res.status(500).send('Error downloading ZIP file: ' + err.message);
+                    }
+                    // Delete the ZIP file after download
+                    fs.unlink(zipFilePath, (err) => {
+                        if (err) {
+                            console.error('Error deleting ZIP file:', err);
+                        }
+                    });
+                });
+            });
+
+            output.on('error', (err) => {
+                return res.status(500).send('Error creating ZIP file: ' + err.message);
+            });
+
+            archive.pipe(output);
+            archive.directory(folderPath, false); // Compress folder contents without the folder itself
+            archive.finalize();
+        });
+    } else {
+        res.status(400).send('Invalid item type');
+    }
 });
 
 app.post('/rename', (req, res) => {
-    // Logic to rename the file
+    const { itemId, itemType, newName } = req.body;
+
+    let sql;
+    if (itemType === 'file') {
+        sql = 'UPDATE files SET file_name = ? WHERE id = ?';
+    } else if (itemType === 'folder') {
+        sql = 'UPDATE folders SET folder_name = ? WHERE id = ?';
+    } else {
+        return res.status(400).send('Invalid item type');
+    }
+
+    db.query(sql, [newName, itemId], (err, result) => {
+        if (err) {
+            console.error("Database error when renaming:", err);
+            return res.status(500).send('Database error: ' + err.message);
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Item not found');
+        }
+        res.send(`${itemType} renamed successfully to ${newName}!`);
+    });
 });
+
 
 app.post('/star', (req, res) => {
     // Logic to star the file
@@ -139,25 +228,31 @@ app.post('/create-folder', (req, res) => {
     const userId = req.session.userId;
 
     if (!userId) {
-        return res.status(401).send("Please log in to create folders.");
+        return res.status(401).json({ success: false, message: "Please log in to create folders." });
     }
 
-    const userDir = path.join(__dirname, 'uploads', String(userId)); // Base directory path for the user
+    const userDir = path.join(__dirname, 'uploads', String(userId));
     const folderPath = path.join(userDir, folderName);
 
-    fs.mkdir(folderPath, { recursive: true }, (err) => {
-        if (err) {
-            return res.status(500).send('Failed to create folder: ' + err.message);
+    fs.access(folderPath, fs.constants.F_OK, (err) => {
+        if (!err) {
+            return res.status(409).json({ success: false, message: "Folder already exists." });
         }
-        const sql = 'INSERT INTO folders (user_id, folder_name, folder_path, creation_date) VALUES (?, ?, ?, NOW())';
-        db.query(sql, [userId, folderName, folderPath], (error, results) => {
-            if (error) {
-                return res.status(500).send('Database error: ' + error.message);
+        fs.mkdir(folderPath, { recursive: true }, (err) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: 'Failed to create folder: ' + err.message });
             }
-            res.send('Folder created successfully!');
+            const sql = 'INSERT INTO folders (user_id, folder_name, folder_path, creation_date) VALUES (?, ?, ?, NOW())';
+            db.query(sql, [userId, folderName, folderPath], (error, results) => {
+                if (error) {
+                    return res.status(500).json({ success: false, message: 'Database error: ' + error.message });
+                }
+                res.json({ success: true, message: 'Folder created successfully!' });
+            });
         });
     });
 });
+
 
 // Sign-in with password route
 app.post('/signin/password', (req, res) => {
@@ -187,6 +282,7 @@ app.post('/signin/password', (req, res) => {
     });
 });
 
+
 // File upload route
 app.post('/upload', upload.single('file'), function (req, res) {
     const userId = req.session.userId; // Ensure you're retrieving the user ID correctly, possibly from a session or JWT token
@@ -194,11 +290,11 @@ app.post('/upload', upload.single('file'), function (req, res) {
     if (!file) {
         return res.status(400).send('Please upload a file.');
     }
-    const userDir = `uploads/${userId}`; // Ensuring files are stored under user-specific directories
+    const userDir = `uploads/`; // Corrected directory name
     const filePath = `${userDir}/${file.originalname}`;
 
-    const insertSql = 'INSERT INTO files (user_id, file_name, file_path, upload_date, ReasonSuggested, Location) VALUES (?, ?, ?, NOW(), ?, ?)';
-    db.query(insertSql, [userId, file.originalname, filePath, 'Date of upload', file.path], (err, result) => {
+    const insertSql = 'INSERT INTO files (user_id, file_name, file_path, upload_date) VALUES (?, ?, ?, NOW())';
+    db.query(insertSql, [userId, file.originalname, filePath], (err, result) => {
         if (err) {
             return res.status(500).send('Database error: ' + err.message);
         }
@@ -246,6 +342,55 @@ app.get('/get-user-folders', function (req, res) {
         res.json(results);
     });
 });
+
+
+app.post('/delete-item', (req, res) => {
+    const { itemId, itemType } = req.body;
+
+    if (itemType === 'file') {
+        // Delete file record from the database
+        db.query('DELETE FROM files WHERE id = ?', [itemId], (err, result) => {
+            if (err) {
+                return res.status(500).send('Database error: ' + err.message);
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).send('File not found in the database');
+            }
+            res.send('File deleted successfully!');
+        });
+    } else if (itemType === 'folder') {
+        // Delete folder and its contents from the database and filesystem
+        db.query('SELECT folder_path FROM folders WHERE id = ?', [itemId], (err, result) => {
+            if (err) {
+                return res.status(500).send('Database error: ' + err.message);
+            }
+            if (result.length === 0) {
+                return res.status(404).send('Folder not found in the database');
+            }
+
+            const folderPath = result[0].folder_path;
+
+            // Delete folder and its contents from the filesystem
+            fs.rmdir(folderPath, { recursive: true }, (err) => {
+                if (err) {
+                    return res.status(500).send('Error deleting folder and its contents from filesystem: ' + err.message);
+                }
+
+                // Once folder and its contents are deleted from filesystem, delete its record from the database
+                db.query('DELETE FROM folders WHERE id = ?', [itemId], (err, result) => {
+                    if (err) {
+                        return res.status(500).send('Database error: ' + err.message);
+                    }
+                    res.send('Folder deleted successfully!');
+                });
+            });
+        });
+    } else {
+        res.status(400).send('Invalid item type');
+    }
+});
+
+
 
 
 
