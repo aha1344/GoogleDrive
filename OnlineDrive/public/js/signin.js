@@ -48,8 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
             handlePasswordCheck();
         }
     }
-
-    // Function to handle password check
+    
     function handlePasswordCheck() {
         fetch('/signin/password', {
             method: 'POST',
@@ -57,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({
                 email: emailInput.value,
                 password: passwordInput.value,
-                rememberMe: rememberMeCheckbox.checked
+                rememberMe: rememberMeCheckbox.checked.toString() // Send string value of checked status
             })
         })
         .then(res => res.json())
@@ -75,7 +74,6 @@ document.addEventListener('DOMContentLoaded', function() {
             passwordError.style.display = 'block';
         });
     }
-
     nextButton.addEventListener('click', handleNextButtonClick);
 
     document.addEventListener('keydown', function(event) {

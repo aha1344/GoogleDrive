@@ -236,7 +236,7 @@ app.post('/signin/password', (req, res) => {
 
     db.query(sql, [email], (err, results) => {
         if (err) {
-            return res.status(500).json({ message: 'Database error: ' + err.message, error: true });
+            return res.status(500).json({ message: 'Database error', error: true });
         }
         if (results.length > 0) {
             const user = results[0];
@@ -246,7 +246,7 @@ app.post('/signin/password', (req, res) => {
                 }
                 if (isMatch) {
                     req.session.userId = user.id; // Set user ID in session
-                    if (rememberMe) {
+                    if (rememberMe === 'true') { // Ensure you check for the string 'true'
                         req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // Extend session if 'Remember Me' is checked
                     } else {
                         req.session.cookie.expires = false; // Session ends when browser closes
