@@ -282,6 +282,7 @@ app.post('/signin/password', (req, res) => {
     });
 });
 
+
 // File upload route
 app.post('/upload', upload.single('file'), function (req, res) {
     const userId = req.session.userId; // Ensure you're retrieving the user ID correctly, possibly from a session or JWT token
@@ -289,11 +290,11 @@ app.post('/upload', upload.single('file'), function (req, res) {
     if (!file) {
         return res.status(400).send('Please upload a file.');
     }
-    const userDir = `Uploads/`; // Ensuring files are stored under user-specific directories
+    const userDir = `uploads/`; // Corrected directory name
     const filePath = `${userDir}/${file.originalname}`;
 
-    const insertSql = 'INSERT INTO files (user_id, file_name, file_path, upload_date, ReasonSuggested, Location) VALUES (?, ?, ?, NOW(), ?, ?)';
-    db.query(insertSql, [userId, file.originalname, filePath, 'Date of upload', file.path], (err, result) => {
+    const insertSql = 'INSERT INTO files (user_id, file_name, file_path, upload_date) VALUES (?, ?, ?, NOW())';
+    db.query(insertSql, [userId, file.originalname, filePath], (err, result) => {
         if (err) {
             return res.status(500).send('Database error: ' + err.message);
         }
