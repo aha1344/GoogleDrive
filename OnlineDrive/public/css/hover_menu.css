@@ -1,18 +1,14 @@
 .file-item, .folder-item{
   display: flex;
-  /* justify-content: space-between; */
-  /* padding: 10px; */
   border-bottom: 1px solid #ccc;
   background-color: #fff;
   cursor: pointer;
-  /* width: 60%; */
-
 }
 .file-item:hover, .folder-item:hover{
   background-color: #ccc;
 }
 .file-item:hover .file-actions {
-  display: block; /* Show actions on hover */
+  display: block;
 }
 
 .file-actions span, .kebab-items span {
@@ -44,5 +40,5 @@
   background-color: #f1f1f1;
 }
 .kebab-menu:hover .kebab-items {
-  display: block; /* This will show the kebab-items when the kebab-menu is hovered */
+  display: block; 
 }

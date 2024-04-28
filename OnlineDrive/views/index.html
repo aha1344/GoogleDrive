@@ -85,8 +85,68 @@
             <div class="search-container">
                 <button id="search-button"><img src="/Pics/search.png" alt="search" id="search-img"></button>
                 <input id="search-bar" type="search" placeholder="Search in Drive" onkeyup="handleSearch()">
-                <button id="setting-filter"><img src="/Pics/settings.png" alt="" id="setting-filter-img"></button>
+                <button id="setting-filter" onclick="openElement()"><img src="/Pics/settings.png" alt="" id="setting-filter-img"></button>
             </div>
+            <div class="background" id="background" style="display: none;"></div> 
+
+                <div class="search-block" id="searchblock" style="display: none;">
+                    <div class="search-field">
+                        <label for="type">Type</label>
+                        <select id="type">
+                            <option value="any">Photos & images</option>
+                            <option value="any">PDFs</option>
+                            <option value="any">Documents</option>
+                            <option value="any">videos</option>
+                        </select>
+                    </div>
+        
+                    <div class="search-field">
+                        <label for="owner">Owner</label>
+                        <select id="owner">
+                            <option value="any">Anyone</option>
+                            <option value="any">owned by me</option>
+                            <option value="any">Not Owned by me</option>
+                            <option value="any">Specific person</option>
+                        </select>
+                    </div>
+        
+                    <div class="search-field">
+                        <label for="words">Has the words</label>
+                        <input type="text" id="words" placeholder="Enter words found in the file">
+                    </div>
+        
+                    <div class="search-field">
+                        <label for="itemName">Item name</label>
+                        <input type="text" id="itemName" placeholder="Enter a term that matches part of the file name">
+                    </div>
+        
+                    <div class="search-field">
+                        <label for="location">Location</label>
+                        <select id="location">
+                            <option value="anywhere">Anywhere</option>
+                        </select>
+                    </div>
+        
+                    <div class="checkbox-field">
+                        <input class="checkbox" type="checkbox" id="inTrash">
+                        <label class="checkboxLabel" for="inTrash">In trash</label>
+        
+                        <input class="checkbox" type="checkbox" id="starred">
+                        <label class="checkboxLabel" for="starred">Starred</label>
+                    
+                        <input class="checkbox" type="checkbox" id="encrypted">
+                        <label class="checkboxLabel" for="encrypted">Encrypted</label>
+                    </div>
+        
+                    <div class="date-field">
+                        <label for="dateModified">Date modified</label>
+                        <input type="date" id="dateModified">
+                    </div>
+        
+                    <button class="reset-button" onclick="performSearch()">Reset</button>
+                    <button class="search-button" onclick="performSearch()">Search</button>
+                    <img class="exit" src="/Pics/close.png" alt="" onclick="closeElement()">
+                </div>
         
             
 
@@ -143,10 +203,8 @@
                         <div class="file-content">
                             <div class="name-content">
                                 <div id="fileListContainer" class="list-layout">
-                                    <!-- Files will be dynamically inserted here -->
                                 </div>
                                 <div id="folderListContainer" class="list-layout">
-                                    <!-- Folders will be dynamically inserted here -->
                                 </div>
                             </div>
                         </div>

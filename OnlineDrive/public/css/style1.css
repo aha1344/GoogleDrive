@@ -32,9 +32,8 @@
     padding-top: 8px;
     padding-bottom: 8px;
     margin-top: 15px;
-    /* margin-bottom: 15px; */
     cursor: pointer;
-    box-shadow: none; /* Initially no box shadow */
+    box-shadow: none;
     transition: box-shadow 0.3s ease;
 }
 
@@ -51,7 +50,7 @@
 }
 
 .add-new-button:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add box shadow on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
     background-color: rgb(231,232,235);
 }
 #plus-sign{
@@ -88,17 +87,17 @@
     
     margin-top: 10px;
     width: 80%;
-    height: 5px; /* Adjust the height of the loading bar */
-    background-color: rgb(231,232,235); /* Background color of the loading bar */
-    border-radius: 5px; /* Rounded corners for the loading bar */
-    overflow: hidden; /* Hide overflowing content */
+    height: 5px;
+    background-color: rgb(231,232,235); 
+    border-radius: 5px;
+    overflow: hidden; 
 }
 
 .progress {
     width: 0%;
     height: 100%;
-    background-color: #4285f4; /* Color of the progress bar */
-    transition: width 0.3s ease; /* Smooth transition for width changes */
+    background-color: #4285f4; 
+    transition: width 0.3s ease; 
 }
 .c{
     margin-top: 5px;

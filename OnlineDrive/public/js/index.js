@@ -887,3 +887,46 @@ function createList(items, type) {
     }
     return list;
 }
+
+// Function to open an element (e.g., a search block and background) for display
+function openElement() {
+    // Get the search block and background elements
+    const searchblock = document.getElementById('searchblock');
+    const background = document.getElementById('background');
+
+    // Set their display properties to 'block' for visibility
+    searchblock.style.display = 'block';
+    background.style.display = 'block';
+}
+
+// Function to close an element (e.g., a search block and background) to hide it
+function closeElement() {
+    // Get the search block and background elements
+    const searchblock = document.getElementById('searchblock');
+    const background = document.getElementById('background');
+
+    // Set their display properties to 'none' to hide them
+    searchblock.style.display = 'none';
+    background.style.display = 'none';
+}
+
+// Function to reset search inputs to default values
+function resetSearch() {
+    // Set default values for various search input elements
+    document.getElementById('type').value = 'any';
+    document.getElementById('owner').value = 'any';
+    document.getElementById('words').value = '';
+    document.getElementById('itemName').value = '';
+    document.getElementById('location').value = 'anywhere';
+    document.getElementById('inTrash').checked = false;
+    document.getElementById('starred').checked = false;
+    document.getElementById('encrypted').checked = false;
+    document.getElementById('dateModified').value = '';
+}
+
+// Function to perform a search operation
+function performSearch() {
+    // Alert the user that a search is being performed
+    alert('Performing search...');
+    // This function triggers the actual search functionality
+}
