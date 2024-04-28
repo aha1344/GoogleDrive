@@ -12,6 +12,7 @@
 .logo-img-main{
     width: 20px; 
     height: 20px;
+    vertical-align: middle;
 }
 .title{
     font-size: x-large;
@@ -400,7 +401,7 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr); /* Change this value to adjust the number of columns */
     grid-gap: 20px; /* Adjust the spacing between items */
-    grid-auto-flow: dense; /* Items will fill in the available space */
+    grid-auto-flow: dense; /* Items will fill in the available space */ 
 }
   
 .grid-layout .file-item,
@@ -409,6 +410,7 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     background-color: gray;
     border-radius: 5px;
+    /* width: 50%; */
 }
 
   
@@ -455,17 +457,21 @@
   
 #create-folder-form .modal-content {
     background-color: #fefefe;
-    margin: 20% auto; /* 15% from the top and centered horizontally */
+    margin: 15% auto;
     padding: 20px;
     border: 2px ;
-    width: 20%; /* Adjust width of the modal content */
-    border-radius: 20px;
+    width: 25%; /* Adjust width of the modal content */
+    border-radius: 15px;
+}
+
+.cancel-create-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
 }
 .close {
     color: blue;
     float: right;
-    font-size: 28px;
-    font-weight: bold;
 }
 
 .close:hover,
@@ -476,47 +482,75 @@
 }
 
 #folder-name-input {
-    width: calc(100% - 40px); /* Full width minus padding */
+    width: 100%; /* Full width minus padding */
     padding: 10px 20px;
     margin-bottom: 20px; /* Space before the button */
-    border: 1px solid blue;
+    border: 2px solid blue;
     box-sizing: border-box;
+    border-radius: 5px;
 }
 #NewF{
-    font-size: large;
+    font-size: 20pt;
+    margin: 0;
+    margin-bottom: 20px;
+}
+#close-modal{
+    background-color: transparent;
+    color: blue;
+    border: none;
+    cursor: pointer;
+    /* text-align: center; */
+    float: right;
+    vertical-align: middle;
+    width: fit-content;
+    padding-right: 20px;
 }
 
 #create-folder-button {
-    background-color: blue;
-    color: white;
+    background-color: transparent;
+    color: blue;
     border: none;
     cursor: pointer;
-    text-align: center;
+    /* text-align: center; */
+    float: right;
+    width: fit-content;
 }
 
 #create-folder-button:hover {
     opacity: 0.8;
 }
-/* CSS for the modal, inspired by the context menu in the image */
+
+/* CSS for the modal */
 .modal1 {
     position: fixed; /* Fixed position to place the modal above other content */
-    top: 50%; /* Center vertically */
-    left: 50%; /* Center horizontally */
-    transform: translate(-50%, -50%); /* Offset the modal to truly center it */
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); /* Center the modal horizontally and vertically */
     background-color: #FFFFFF; /* Background color of the modal */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D effect */
-    width: auto; /* Auto width to adjust to content */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow for 3D effect */
+    width: 20%; /* Adjust the width as needed */
     padding: 16px; /* Padding inside the modal */
     border-radius: 8px; /* Rounded corners of the modal */
     z-index: 1000; /* High z-index to ensure it's on top */
     display: none; /* Initially hide the modal */
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; /* Add transition for smooth appearance */
 }
+
+/* Show the modal when active */
+.modal1.active {
+    display: block;
+    opacity: 1;
+}
+
+
 
 .modal1 .modal-content {
     color: #5f6368; /* Text color for modal content */
     font-family: 'Roboto', sans-serif; /* Font style similar to the image */
     font-size: 14px; /* Font size similar to the image */
     line-height: 1.4; /* Line height for better readability */
+    
+    
 }
 
 /* CSS for delete and download buttons positioned above each other */
@@ -543,7 +577,7 @@
 }
 
 .modal1 .modal-buttons button:hover {
-    background-color: #f1f3f4; /* Slight background color on hover */
+    background-color: #C2E7FF; /* Slight background color on hover */
 }
 
 .modal1 .modal-buttons button.delete {
@@ -552,6 +586,39 @@
 
 .modal1 .modal-buttons button.download {
     color: #1a73e8; 
+}
+#close-btn{
+    background-color: transparent;
+    border: transparent;
+    color: black;
+    /* float: right; */
+    font-size: 28px;
+    font-weight: bold;
+    
+}
+.close-btn{
+    background-color: transparent;
+    border: transparent;
+    
+}
+.close-container{
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+}
+
+#starIcon{
+    vertical-align: middle;
+}
+.star{
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    background-color: transparent;
+    border: transparent;
+}
+.filled {
+    fill: black;
 }
 
 

