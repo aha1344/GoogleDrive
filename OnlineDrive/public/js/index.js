@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     homeBtn.addEventListener('click', () => {
         showContent(homeContent);
-        fetchUserFiles(); 
+        fetchMyDriveContent();
         document.title = 'Home - Google Drive'; 
     });
 
@@ -738,4 +738,33 @@ function createNewFolder(folderName) {
         fetchUserFiles(); // Make sure this function is defined
     })
     .catch(error => console.error('Error creating folder:', error));
+}
+function fetchMyDriveContent() {
+    Promise.all([
+        fetch('/get-user-files').then(res => res.json()),
+        fetch('/get-user-folders').then(res => res.json())
+    ]).then(([files, folders]) => {
+        const contentContainer = document.getElementById('myDriveContent');
+        contentContainer.innerHTML = ''; // Clear existing content
+
+        const filesList = createList(files, 'file');
+        const foldersList = createList(folders, 'folder');
+
+        contentContainer.appendChild(filesList);
+        contentContainer.appendChild(foldersList);
+    }).catch(err => {
+        console.error('Failed to fetch files or folders:', err);
+        alert('Failed to load My Drive content.');
+    });
+}
+
+// Helper function to create list elements for files or folders
+function createList(items, type) {
+    const list = document.createElement('div');
+    items.forEach(item => {
+        const itemElement = document.createElement('div');
+        itemElement.textContent = type === 'file' ? `${item.file_name} - ${item.location}` : item.folder_name;
+        list.appendChild(itemElement);
+    });
+    return list;
 }
