@@ -32,3 +32,9 @@ CREATE TABLE folders (
     creation_date DATETIME,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+
+-- SELECT * FROM users;
+-- SELECT * FROM files;
+-- SELECT * FROM folders;
+
