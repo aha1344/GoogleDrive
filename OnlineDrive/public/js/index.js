@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     myDriveBtn.addEventListener('click', () => {
         showContent(myDriveContent);
-        fetchUserFiles(); 
+        fetchMyDriveContent(); 
         document.title = 'My Drive - Google Drive'; 
     });
 
@@ -764,4 +764,93 @@ function createNewFolder(folderName) {
         fetchUserFiles(); // Make sure this function is defined
     })
     .catch(error => console.error('Error creating folder:', error));
+}
+function fetchMyDriveContent() {
+    const contentContainer = document.getElementById('myDriveContent');
+
+    // Check if content already exists
+    const existingFilesList = contentContainer.querySelector('.files-list');
+    const existingFoldersList = contentContainer.querySelector('.folders-list');
+
+    if (existingFilesList && existingFoldersList) {
+        return; // Content already exists, exit function
+    }
+
+    Promise.all([
+        fetch('/get-user-files').then(res => res.json()),  // Fetch files
+        fetch('/get-user-folders').then(res => res.json()) // Fetch folders
+    ]).then(([files, folders]) => {
+        // Create and append files list to the content container
+        const filesList = createList(files, 'file');
+        filesList.classList.add('files-list'); // Add a class to identify files list
+        contentContainer.appendChild(filesList);
+
+        // Create and append folders list to the content container
+        const foldersList = createList(folders, 'folder');
+        foldersList.classList.add('folders-list'); // Add a class to identify folders list
+        contentContainer.appendChild(foldersList);
+    }).catch(err => {
+        console.error('Failed to fetch files or folders:', err);
+        alert('Failed to load My Drive content.');
+    });
+}
+
+
+// This helper function creates HTML elements for files or folders and returns them as a list element.
+function createList(items, type) {
+    const list = document.createElement('div');
+    items.forEach(item => {
+        const itemElement = document.createElement('div');
+        const itemNameElement = document.createElement('div');
+        const ownerElement = document.createElement('div');
+        const dateCreatedElement = document.createElement('div');
+        // const itemDetailsElement = document.createElement('div');
+
+        itemNameElement.textContent = type === 'file' ? item.file_name : item.folder_name;
+        // itemDetailsElement.textContent = type === 'file' ? item.location : '';
+
+        if (type === 'file') {
+            ownerElement.textContent = item.owner;
+            dateCreatedElement.textContent = new Date(item.upload_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } else {
+            ownerElement.textContent = item.owner;
+            dateCreatedElement.textContent = new Date(item.creation_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        itemElement.className = type === 'file' ? 'file-item' : 'folder-item';
+        itemNameElement.className = 'item-name';
+        // itemDetailsElement.className = 'item-details';
+        ownerElement.className = 'item-owner';
+        dateCreatedElement.className = 'item-date-created';
+
+        itemElement.appendChild(itemNameElement);
+        if (type === 'file') {
+            // itemElement.appendChild(itemDetailsElement);
+            itemElement.appendChild(ownerElement);
+            itemElement.appendChild(dateCreatedElement);
+        } else {
+            itemElement.appendChild(ownerElement);
+            itemElement.appendChild(dateCreatedElement);
+        }
+
+        // Add modal functionality or any other interactive element here
+        itemElement.addEventListener('click', function() {
+            modal1.call(this, itemNameElement.textContent, () => {
+                deleteItem(item.id, type, () => {
+                    console.log(`${type} deleted:`, itemNameElement.textContent);
+                    type === 'file' ? fetchUserFiles() : fetchUserFolders(); // Refresh list after deletion
+                });
+            }, () => {
+                downloadItem(item.id, type);
+            }, () => {
+                renameItem(item.id, type, () => {
+                    console.log(`${type} renamed:`, itemNameElement.textContent);
+                    type === 'file' ? fetchUserFiles() : fetchUserFolders(); // Refresh list after renaming
+                });
+            });
+        });
+
+        list.appendChild(itemElement);
+    });
+    return list;
 }
